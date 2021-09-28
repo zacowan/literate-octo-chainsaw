@@ -61,7 +61,7 @@
 
 - Sent as first message after handshaking is done
 - Use bitfield as payload
-  - Each bit represents whether peer ahs the corresponding piece of a file or not
+  - Each bit represents whether peer has the corresponding piece of a file or not
   - First byte corresponds to piece indices 0-7 from high bit to low bit. Next byte 8-15, etc.
   - Spare bits at end are set to zero
 
