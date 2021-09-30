@@ -1,3 +1,5 @@
+package p2p;
+
 import java.net.*;
 import java.io.*;
 import java.nio.*;
@@ -9,7 +11,7 @@ public class MessageHandler {
   private String hostIP;
   private String hostPort;
 
-  public static enum messageTypeEnum {
+  public static enum MessageTypeEnum {
     CHOKE, UNCHOKE, INTERESTED, NOT_INTERESTED, HAVE, BITFIELD, REQUEST, PIECE
   }
 
@@ -19,8 +21,15 @@ public class MessageHandler {
     this.hostPort = hostPort;
   }
 
-  public void sendHandShake(String peerID) {
+  public void sendHandshake(ObjectOutputStream out, String peerID) {
     String message = "P2PFILESHARINGPROJ0000000000" + peerID;
+    try {
+      out.writeObject(message);
+      out.flush();
+    } catch (Exception e) {
+      System.err.println(e.getMessage());
+    }
+
   }
 
   public void sendMessage() {
