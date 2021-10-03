@@ -6,8 +6,6 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
 
-import p2p.MessageHandler;
-
 public class Client {
   Socket requestSocket; // socket connect to the server
   ObjectOutputStream out; // stream write to the socket
@@ -28,10 +26,10 @@ public class Client {
       out.flush();
       in = new ObjectInputStream(requestSocket.getInputStream());
 
-      MessageHandler msgHandler = new MessageHandler("000", "192.168.1.1", "3000");
+      MessageHandler msgHandler = new MessageHandler(001, "192.168.1.1", "3000");
 
       // Perform handshake
-      msgHandler.sendHandshake(out, "1");
+      msgHandler.sendHandshake(out, 001);
       MESSAGE = (String) in.readObject();
       System.out.println("Receive message: " + MESSAGE);
 
