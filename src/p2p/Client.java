@@ -26,10 +26,10 @@ public class Client {
       out.flush();
       in = new ObjectInputStream(requestSocket.getInputStream());
 
-      MessageHandler msgHandler = new MessageHandler(001, "192.168.1.1", "3000");
+      MessageHandler msgHandler = new MessageHandler(1, "192.168.1.1", "3000");
 
       // Perform handshake
-      msgHandler.sendHandshake(out, 001);
+      msgHandler.sendHandshake(out, 1);
       MESSAGE = (String) in.readObject();
       System.out.println("Receive message: " + MESSAGE);
 
