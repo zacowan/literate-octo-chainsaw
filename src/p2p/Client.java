@@ -6,17 +6,22 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
 
-public class Client {
+public class Client extends Thread {
   Socket requestSocket; // socket connect to the server
   ObjectOutputStream out; // stream write to the socket
   ObjectInputStream in; // stream read from the socket
   String message; // message send to the server
   String MESSAGE; // capitalized message read from the server
 
-  public void Client() {
+  PeerInfo hostInfo;
+  PeerInfo targetInfo;
+
+  public Client(PeerInfo hostInfo, PeerInfo targetInfo) {
+    this.hostInfo = hostInfo;
+    this.targetInfo = targetInfo;
   }
 
-  void run() {
+  public void run() {
     try {
       // create a socket to connect to the server
       requestSocket = new Socket("localhost", 8000);
@@ -26,7 +31,7 @@ public class Client {
       out.flush();
       in = new ObjectInputStream(requestSocket.getInputStream());
 
-      MessageHandler msgHandler = new MessageHandler(1, "192.168.1.1", "3000");
+      MessageHandler msgHandler = new MessageHandler();
 
       // Perform handshake
       msgHandler.sendHandshake(out, 1);
@@ -75,11 +80,4 @@ public class Client {
       ioException.printStackTrace();
     }
   }
-
-  // main method
-  public static void main(String args[]) {
-    Client client = new Client();
-    client.run();
-  }
-
 }

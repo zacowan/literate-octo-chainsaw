@@ -36,47 +36,48 @@ public class peerProcess {
       System.out.printf("Error reading Common.cfg: %s", e.getMessage());
     }
 
-    ArrayList<PeerInfo> peerList = new ArrayList<PeerInfo>();
-    PeerInfo thisPeer = null;
+    SynchronizedPeerInfoList.instance = new SynchronizedPeerInfoList();
 
     // read PeerInfo.cfg
     File peerInfoFile = new File("PeerInfo.cfg");
     try {
       Scanner scanner = new Scanner(peerInfoFile);
+      int index = 0;
       while (scanner.hasNextLine()) {
         String[] line = scanner.nextLine().split(" ");
         PeerInfo currentPeer = new PeerInfo(line[0], line[1], line[2], line[3]);
-        peerList.add(currentPeer);
+        SynchronizedPeerInfoList.instance.addPeer(currentPeer);
         if (currentPeer.peerID == peerID) {
-          thisPeer = currentPeer;
+          SynchronizedPeerInfoList.instance.setThisPeerIndex(index);
         }
+        index++;
       }
       scanner.close();
     } catch (Exception e) {
       System.out.printf("Error reading PeerInfo.cfg: %s", e.getMessage());
     }
 
+    final int thisPeerIndex = SynchronizedPeerInfoList.instance.getThisPeerIndex();
+
     // spawn server
     try {
-      if (thisPeer != null) {
-        // TODO: Joel
-        // server should have access to peerList
-        // server should run in its own thread
-        new Server().run(Integer.parseInt(thisPeer.port));
-        // new Thread(new Send(server)).start();
-        // new Thread(new Recieve(server)).start();
-      }
+      // TODO: Joel
+      // server should have access to peerList
+      // server should run in its own thread
+      // new Server().run(Integer.parseInt(thisPeer.port));
+      // new Thread(new Send(server)).start();
+      // new Thread(new Recieve(server)).start();
     } catch (Exception e) {
       System.out.println(e.getMessage());
     }
     // spawn X clients
-    PeerInfo currentPeer = peerList.get(0);
-    while (currentPeer != thisPeer) {
-      // TODO: Zach
-      // each client should be uniquely identifyable
-      // each client should have access to peerList
-      // each client should run in its own thread
-      new Client().run();
+    for (int i = 0; i < SynchronizedPeerInfoList.instance.getSize(); i++) {
+      PeerInfo currentPeer = SynchronizedPeerInfoList.instance.getPeer(i);
+      if (i != thisPeerIndex) {
+        new Client(SynchronizedPeerInfoList.instance.getThisPeer(), currentPeer).start();
+      } else {
+        break;
+      }
     }
 
     // peerList of all peers
