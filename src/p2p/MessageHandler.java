@@ -7,10 +7,6 @@ import java.nio.channels.*;
 import java.util.*;
 
 public class MessageHandler {
-  private int hostID;
-  private String hostIP;
-  private String hostPort;
-
   public static enum MessageType {
     CHOKE((byte) 0), UNCHOKE((byte) 1), INTERESTED((byte) 2), NOT_INTERESTED((byte) 3), HAVE((byte) 4),
     BITFIELD((byte) 5), REQUEST((byte) 6), PIECE((byte) 7);
@@ -20,12 +16,6 @@ public class MessageHandler {
     private MessageType(byte value) {
       this.value = value;
     }
-  }
-
-  public MessageHandler(int hostID, String hostIP, String hostPort) {
-    this.hostID = hostID;
-    this.hostIP = hostIP;
-    this.hostPort = hostPort;
   }
 
   public void sendHandshake(ObjectOutputStream out, int peerID) {
