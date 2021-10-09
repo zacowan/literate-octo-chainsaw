@@ -1,5 +1,3 @@
-package p2p;
-
 import java.net.*;
 import java.io.*;
 import java.nio.*;
@@ -47,7 +45,7 @@ public class peerProcess {
         String[] line = scanner.nextLine().split(" ");
         PeerInfo currentPeer = new PeerInfo(line[0], line[1], line[2], line[3]);
         SynchronizedPeerInfoList.instance.addPeer(currentPeer);
-        if (currentPeer.peerID == peerID) {
+        if (currentPeer.peerID.equals(peerID)) {
           SynchronizedPeerInfoList.instance.setThisPeerIndex(index);
         }
         index++;

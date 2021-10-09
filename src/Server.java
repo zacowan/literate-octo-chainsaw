@@ -1,5 +1,3 @@
-package p2p;
-
 import java.net.*;
 import java.io.*;
 import java.nio.*;
