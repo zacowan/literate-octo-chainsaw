@@ -3,7 +3,6 @@ import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
-import java.net.Socket;
 
 public class peerProcess {
 
@@ -11,24 +10,19 @@ public class peerProcess {
     // args[0] = peerID
     String peerID = args[0];
 
-    // TODO: use me
-    String numberOfPreferredNeighbors;
-    String unchokingInterval;
-    String optimisticUnchokingInterval;
-    String fileName;
-    String fileSize;
-    String pieceSize;
+    CommonConfig.instance = new CommonConfig();
+    CommonConfig cc = CommonConfig.instance;
 
     // read Common.cfg
     File commonFile = new File("Common.cfg");
     try {
       Scanner scanner = new Scanner(commonFile);
-      numberOfPreferredNeighbors = scanner.nextLine().split(" ")[1];
-      unchokingInterval = scanner.nextLine().split(" ")[1];
-      optimisticUnchokingInterval = scanner.nextLine().split(" ")[1];
-      fileName = scanner.nextLine().split(" ")[1];
-      fileSize = scanner.nextLine().split(" ")[1];
-      pieceSize = scanner.nextLine().split(" ")[1];
+      cc.numberOfPreferredNeighbors = scanner.nextLine().split(" ")[1];
+      cc.unchokingInterval = scanner.nextLine().split(" ")[1];
+      cc.optimisticUnchokingInterval = scanner.nextLine().split(" ")[1];
+      cc.fileName = scanner.nextLine().split(" ")[1];
+      cc.fileSize = scanner.nextLine().split(" ")[1];
+      cc.pieceSize = scanner.nextLine().split(" ")[1];
       scanner.close();
     } catch (Exception e) {
       System.out.printf("Error reading Common.cfg: %s", e.getMessage());
