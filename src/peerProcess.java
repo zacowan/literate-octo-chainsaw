@@ -53,12 +53,7 @@ public class peerProcess {
 
     // spawn server
     try {
-      // TODO: Joel
-      // server should have access to peerList
-      // server should run in its own thread
-      // new Server().run(Integer.parseInt(thisPeer.port));
-      // new Thread(new Send(server)).start();
-      // new Thread(new Recieve(server)).start();
+      new Server(SynchronizedPeerInfoList.instance.getThisPeer().port).start();
     } catch (Exception e) {
       System.out.println(e.getMessage());
     }

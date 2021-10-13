@@ -4,20 +4,30 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
 
-public class Server {
+public class Server extends Thread {
 
-	public void run(int port) throws Exception {
+	int port;
+
+	public Server(String port) {
+		this.port = Integer.parseInt(port);
+	}
+
+	public void run() {
 		System.out.println("The server is running.");
-		ServerSocket listener = new ServerSocket(port);
-		int clientNum = 1;
 		try {
-			while (true) {
-				new Handler(listener.accept(), clientNum).start();
-				System.out.println("Client " + clientNum + " is connected!");
-				clientNum++;
+			ServerSocket listener = new ServerSocket(port);
+			int clientNum = 1;
+			try {
+				while (true) {
+					new Handler(listener.accept(), clientNum).start();
+					System.out.println("Client " + clientNum + " is connected!");
+					clientNum++;
+				}
+			} finally {
+				listener.close();
 			}
-		} finally {
-			listener.close();
+		} catch (Exception e) {
+			System.err.println(e);
 		}
 
 	}

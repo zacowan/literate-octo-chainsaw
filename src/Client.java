@@ -22,8 +22,8 @@ public class Client extends Thread {
   public void run() {
     try {
       // create a socket to connect to the server
-      requestSocket = new Socket("localhost", 8000);
-      System.out.println("Connected to localhost in port 8000");
+      requestSocket = new Socket("localhost", Integer.parseInt(targetInfo.port));
+      System.out.printf("Connected to peer %s on port %s.\n", targetInfo.peerID, targetInfo.port);
       // initialize inputStream and outputStream
       out = new ObjectOutputStream(requestSocket.getOutputStream());
       out.flush();
