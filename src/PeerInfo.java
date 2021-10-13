@@ -1,5 +1,3 @@
-package p2p;
-
 public class PeerInfo {
   String peerID;
   String hostname;
