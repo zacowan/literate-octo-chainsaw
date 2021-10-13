@@ -59,17 +59,18 @@ public class peerProcess {
 
     final int thisPeerIndex = SynchronizedPeerInfoList.instance.getThisPeerIndex();
 
-    // spawn server
-    try {
-      // TODO: Joel
-      // server should have access to peerList
-      // server should run in its own thread
-      // new Server().run(Integer.parseInt(thisPeer.port));
-      // new Thread(new Send(server)).start();
-      // new Thread(new Recieve(server)).start();
-    } catch (Exception e) {
-      System.out.println(e.getMessage());
+    //Spawn server
+    int portNum = Integer.parseInt(thisPeerIndex[2]);
+    ServerSocket serverSocket = new ServerSocket(portNum);
+    
+    while(true)
+    {
+      Socket server = serverSocket.accept();
+      new Thread(new Send(server)).start();
+      new Thread(new Recieve(server)).start();
     }
+    
+
     // spawn X clients
     for (int i = 0; i < SynchronizedPeerInfoList.instance.getSize(); i++) {
       PeerInfo currentPeer = SynchronizedPeerInfoList.instance.getPeer(i);
