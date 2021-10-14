@@ -5,27 +5,6 @@ import java.nio.channels.*;
 import java.util.*;
 
 public class MessageHandler {
-  public static class Message {
-    public MessageType type;
-    public Optional<ArrayList<Byte>> payload;
-
-    public Message(MessageType type, Optional<ArrayList<Byte>> payload) {
-      this.type = type;
-      this.payload = payload;
-    }
-  }
-
-  public static enum MessageType {
-    CHOKE((byte) 0), UNCHOKE((byte) 1), INTERESTED((byte) 2), NOT_INTERESTED((byte) 3), HAVE((byte) 4),
-    BITFIELD((byte) 5), REQUEST((byte) 6), PIECE((byte) 7);
-
-    public byte value;
-
-    private MessageType(byte value) {
-      this.value = value;
-    }
-  }
-
   private static final String HANDSHAKE_PREFIX = "P2PFILESHARINGPROJ0000000000";
 
   public String receiveHandshakeServer(ObjectInputStream in) {

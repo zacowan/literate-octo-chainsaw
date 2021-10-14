@@ -36,8 +36,6 @@ public class Server implements Runnable {
 	 * responsible for dealing with a single client's requests.
 	 */
 	private static class Handler extends Thread {
-		private String message; // message received from the client
-		private String MESSAGE; // uppercase message send to the client
 		private Socket connection;
 		private ObjectInputStream in; // stream read from the socket
 		private ObjectOutputStream out; // stream write to the socket
@@ -65,21 +63,33 @@ public class Server implements Runnable {
 					System.out.printf("Peer %s connected.\n", peerID);
 					Logger.instance.logTCPConnectionFrom(peerID);
 					msgHandler.sendHandshake(out, peerID);
-				}
 
-				try {
 					while (true) {
-						// receive the message sent from the client
-						message = (String) in.readObject();
-						// show the message to the user
-						System.out.println("Receive message: " + message + " from client " + no);
-						// Capitalize all letters in the message
-						MESSAGE = message.toUpperCase();
-						// send MESSAGE back to the client
-						sendMessage(MESSAGE);
+						// Wait for message
+						Message received = msgHandler.receiveMessage(in);
+
+						// Handle the received message
+						switch (received.type) {
+							case BITFIELD:
+								System.out.println("Received bitfield.");
+								// TODO: store bitfield in list of peers
+
+								// TODO: add bitfield to payload
+								Message toSend = new Message(MessageType.BITFIELD, null);
+								msgHandler.sendMessage(out, toSend);
+							case INTERESTED:
+								System.out.println("Received interested.");
+							case NOT_INTERESTED:
+								System.out.println("Received not interested.");
+							case REQUEST:
+								System.out.println("Received request.");
+							default:
+								System.out.println("Default case.");
+						}
 					}
-				} catch (ClassNotFoundException classnot) {
-					System.err.println("Data received in unknown format");
+
+				} else {
+					System.err.println("Handhsake failed.");
 				}
 			} catch (IOException ioException) {
 				System.out.println("Disconnect with Client " + no);
@@ -93,17 +103,6 @@ public class Server implements Runnable {
 				} catch (IOException ioException) {
 					System.out.println("Disconnect with Client " + no);
 				}
-			}
-		}
-
-		// send a message to the output stream
-		public void sendMessage(String msg) {
-			try {
-				out.writeObject(msg);
-				out.flush();
-				System.out.println("Send message: " + msg + " to Client " + no);
-			} catch (IOException ioException) {
-				ioException.printStackTrace();
 			}
 		}
 
