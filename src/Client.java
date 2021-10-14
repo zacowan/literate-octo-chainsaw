@@ -4,6 +4,8 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
 
+import MessageHandler.MessageType;
+
 public class Client implements Runnable {
   Socket requestSocket; // socket connect to the server
   ObjectOutputStream out; // stream write to the socket
@@ -35,6 +37,29 @@ public class Client implements Runnable {
       if (checkHandshake) {
         Logger.instance.logTCPConnectionTo(targetInfo.peerID);
         System.out.println("Handshake successful.");
+
+        // TODO: send bitfield message
+
+        while (true) {
+          MessageHandler.Message received = msgHandler.receiveMessage(in);
+          switch (received.type) {
+            case BITFIELD:
+              System.out.println("Received bitfield.");
+              boolean interested = true;
+              if (interested) {
+                MessageHandler.Message toSend = new MessageHandler.Message(MessageHandler.MessageType.INTERESTED, null);
+                msgHandler.sendMessage(out, toSend);
+              } else {
+                MessageHandler.Message toSend = new MessageHandler.Message(MessageHandler.MessageType.NOT_INTERESTED,
+                    null);
+                msgHandler.sendMessage(out, toSend);
+              }
+
+            default:
+              System.out.println("Default case.");
+          }
+        }
+
       } else {
         System.err.println("Handshake failed.");
       }
