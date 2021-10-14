@@ -53,7 +53,9 @@ public class peerProcess {
 
     // spawn server
     try {
-      new Server(SynchronizedPeerInfoList.instance.getThisPeer().port).start();
+      Server sv = new Server(SynchronizedPeerInfoList.instance.getThisPeer());
+      Thread th = new Thread(sv);
+      th.start();
     } catch (Exception e) {
       System.out.println(e.getMessage());
     }

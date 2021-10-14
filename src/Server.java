@@ -4,22 +4,22 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
 
-public class Server extends Thread {
+public class Server implements Runnable {
 
-	int port;
+	private PeerInfo hostInfo;
 
-	public Server(String port) {
-		this.port = Integer.parseInt(port);
+	public Server(PeerInfo hostInfo) {
+		this.hostInfo = hostInfo;
 	}
 
 	public void run() {
-		System.out.println("The server is running.");
+		System.out.printf("Server for peer %s is running at %s:%s.\n", hostInfo.peerID, hostInfo.hostname, hostInfo.port);
 		try {
-			ServerSocket listener = new ServerSocket(port);
+			ServerSocket listener = new ServerSocket(Integer.parseInt(hostInfo.port));
 			int clientNum = 1;
 			try {
 				while (true) {
-					new Handler(listener.accept(), clientNum).start();
+					new Handler(listener.accept(), clientNum, hostInfo).start();
 					System.out.println("Client " + clientNum + " is connected!");
 					clientNum++;
 				}
@@ -29,7 +29,6 @@ public class Server extends Thread {
 		} catch (Exception e) {
 			System.err.println(e);
 		}
-
 	}
 
 	/**
@@ -43,10 +42,12 @@ public class Server extends Thread {
 		private ObjectInputStream in; // stream read from the socket
 		private ObjectOutputStream out; // stream write to the socket
 		private int no; // The index number of the client
+		private PeerInfo hostInfo;
 
-		public Handler(Socket connection, int no) {
+		public Handler(Socket connection, int no, PeerInfo hostInfo) {
 			this.connection = connection;
 			this.no = no;
+			this.hostInfo = hostInfo;
 		}
 
 		public void run() {
@@ -55,6 +56,16 @@ public class Server extends Thread {
 				out = new ObjectOutputStream(connection.getOutputStream());
 				out.flush();
 				in = new ObjectInputStream(connection.getInputStream());
+
+				MessageHandler msgHandler = new MessageHandler();
+
+				// Perform handshake
+				String peerID = msgHandler.receiveHandshakeServer(in);
+				if (peerID != null) {
+					System.out.printf("Peer %s connected.\n", peerID);
+					msgHandler.sendHandshake(out, peerID);
+				}
+
 				try {
 					while (true) {
 						// receive the message sent from the client

@@ -18,7 +18,21 @@ public class MessageHandler {
 
   private static final String HANDSHAKE_PREFIX = "P2PFILESHARINGPROJ0000000000";
 
-  public boolean receiveHandshake(ObjectInputStream in, String peerID) {
+  public String receiveHandshakeServer(ObjectInputStream in) {
+    try {
+      String received = (String) in.readObject();
+      String peerID = received.substring(HANDSHAKE_PREFIX.length());
+      return peerID;
+    } catch (IOException e) {
+      System.err.println("[receiveHandshake]: IO exception.");
+      e.printStackTrace();
+    } catch (ClassNotFoundException e) {
+      System.err.println("[receiveHandshake]: class not found.");
+    }
+    return null;
+  }
+
+  public boolean receiveHandshakeClient(ObjectInputStream in, String peerID) {
     try {
       String received = (String) in.readObject();
       if (received.equals(HANDSHAKE_PREFIX + peerID)) {
