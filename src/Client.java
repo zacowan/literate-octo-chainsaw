@@ -29,9 +29,15 @@ public class Client implements Runnable {
 
       MessageHandler msgHandler = new MessageHandler();
 
-      // Perform handshake (two-way or three-way)
+      // Perform handshake
       msgHandler.sendHandshake(out, hostInfo.peerID);
-      msgHandler.receiveHandshakeClient(in, hostInfo.peerID);
+      boolean checkHandshake = msgHandler.receiveHandshakeClient(in, hostInfo.peerID);
+      if (checkHandshake) {
+        Logger.instance.logTCPConnectionTo(targetInfo.peerID);
+        System.out.println("Handshake successful.");
+      } else {
+        System.err.println("Handshake failed.");
+      }
 
     } catch (ConnectException e) {
       System.err.println("Connection refused. You need to initiate a server first.");
@@ -42,6 +48,7 @@ public class Client implements Runnable {
     } finally {
       // Close connections
       try {
+        Logger.instance.closeLogFile();
         in.close();
         out.close();
         requestSocket.close();

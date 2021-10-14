@@ -63,6 +63,7 @@ public class Server implements Runnable {
 				String peerID = msgHandler.receiveHandshakeServer(in);
 				if (peerID != null) {
 					System.out.printf("Peer %s connected.\n", peerID);
+					Logger.instance.logTCPConnectionFrom(peerID);
 					msgHandler.sendHandshake(out, peerID);
 				}
 
@@ -85,6 +86,7 @@ public class Server implements Runnable {
 			} finally {
 				// Close connections
 				try {
+					Logger.instance.closeLogFile();
 					in.close();
 					out.close();
 					connection.close();

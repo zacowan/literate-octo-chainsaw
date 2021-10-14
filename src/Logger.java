@@ -61,13 +61,13 @@ public class Logger {
 
   // Zach
   public synchronized void logTCPConnectionTo(String peerID) {
-    String log = getTimestamp() + getPeerString(hostID) + " makes a connection to" + getPeerString(peerID);
+    String log = getTimestamp() + getPeerString(hostID) + " makes a connection to " + getPeerString(peerID);
     writeLogToFile(log);
   }
 
   // Zach
   public synchronized void logTCPConnectionFrom(String peerID) {
-    String log = getTimestamp() + getPeerString(hostID) + " is connected from" + getPeerString(peerID);
+    String log = getTimestamp() + getPeerString(hostID) + " is connected from " + getPeerString(peerID);
     writeLogToFile(log);
   }
 
