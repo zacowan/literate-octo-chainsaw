@@ -12,6 +12,12 @@ Diagram: https://drive.google.com/file/d/170t8bSQvOByvuJmGKxeqEdJOYjQb3RMS/view?
 4. Run the first peer with `java peerProcess PEER_ID1`.
 5. In a separate terminal, `java peerProcess PEER_ID2`.
 
+### Using `run_dev.sh`
+
+1. Make sure you have GNU's `parallel` installed.
+2. Give the script the proper permissions with `chmod +x run_dev.sh`.
+3. Run the script with `./run_dev.sh`.
+
 ## Deadlines
 
 ### October 22

@@ -50,10 +50,16 @@ public class peerProcess {
     }
 
     final int thisPeerIndex = SynchronizedPeerInfoList.instance.getThisPeerIndex();
+    final PeerInfo thisPeer = SynchronizedPeerInfoList.instance.getThisPeer();
+
+    // Create log file
+    Logger.instance = new Logger(thisPeer.peerID);
 
     // spawn server
     try {
-      new Server(SynchronizedPeerInfoList.instance.getThisPeer().port).start();
+      Server sv = new Server(thisPeer);
+      Thread th = new Thread(sv);
+      th.start();
     } catch (Exception e) {
       System.out.println(e.getMessage());
     }
@@ -61,7 +67,9 @@ public class peerProcess {
     for (int i = 0; i < SynchronizedPeerInfoList.instance.getSize(); i++) {
       PeerInfo currentPeer = SynchronizedPeerInfoList.instance.getPeer(i);
       if (i != thisPeerIndex) {
-        new Client(SynchronizedPeerInfoList.instance.getThisPeer(), currentPeer).start();
+        Client cl = new Client(thisPeer, currentPeer);
+        Thread th = new Thread(cl);
+        th.start();
       } else {
         break;
       }
@@ -70,6 +78,9 @@ public class peerProcess {
     // peerList of all peers
     // while (peers.notHaveFile) wait
     // when (peers.haveFile) terminate
+
+    // Close the log file
+    // Logger.instance.closeLogFile();
   }
 
   // set parameters
