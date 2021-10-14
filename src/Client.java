@@ -35,10 +35,39 @@ public class Client implements Runnable {
       if (checkHandshake) {
         Logger.instance.logTCPConnectionTo(targetInfo.peerID);
         System.out.println("Handshake successful.");
+
+        // TODO: send bitfield message
+
+        while (true) {
+          // Wait for message
+          Message received = msgHandler.receiveMessage(in);
+
+          // Handle the received message
+          switch (received.type) {
+            case BITFIELD:
+              System.out.println("Received bitfield.");
+              // TODO: inspect bitfield, compare with what host needs
+              boolean interested = true;
+              if (interested) {
+                Message toSend = new Message(MessageType.INTERESTED, null);
+                msgHandler.sendMessage(out, toSend);
+              } else {
+                Message toSend = new Message(MessageType.NOT_INTERESTED, null);
+                msgHandler.sendMessage(out, toSend);
+              }
+            case CHOKE:
+              System.out.println("Received choke.");
+            case UNCHOKE:
+              System.out.println("Received unchoke.");
+            case PIECE:
+              System.out.println("Received piece.");
+            default:
+              System.out.println("Default case.");
+          }
+        }
       } else {
         System.err.println("Handshake failed.");
       }
-
     } catch (ConnectException e) {
       System.err.println("Connection refused. You need to initiate a server first.");
     } catch (UnknownHostException unknownHost) {
@@ -55,17 +84,6 @@ public class Client implements Runnable {
       } catch (IOException ioException) {
         ioException.printStackTrace();
       }
-    }
-  }
-
-  // send a message to the output stream
-  void sendMessage(String msg) {
-    try {
-      // stream write the message
-      out.writeObject(msg);
-      out.flush();
-    } catch (IOException ioException) {
-      ioException.printStackTrace();
     }
   }
 }
