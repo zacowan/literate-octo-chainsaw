@@ -61,7 +61,9 @@ public class peerProcess {
     for (int i = 0; i < SynchronizedPeerInfoList.instance.getSize(); i++) {
       PeerInfo currentPeer = SynchronizedPeerInfoList.instance.getPeer(i);
       if (i != thisPeerIndex) {
-        new Client(SynchronizedPeerInfoList.instance.getThisPeer(), currentPeer).start();
+        Client cl = new Client(SynchronizedPeerInfoList.instance.getThisPeer(), currentPeer);
+        Thread th = new Thread(cl);
+        th.start();
       } else {
         break;
       }
