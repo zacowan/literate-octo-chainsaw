@@ -5,12 +5,21 @@ import java.nio.channels.*;
 import java.util.*;
 import java.net.Socket;
 
-public class SynchronizedPeerInfoList {
+public class PeerInfoList {
 
-  public static SynchronizedPeerInfoList instance = null;
+  public static PeerInfoList instance = null;
 
   private final ArrayList<PeerInfo> peerInfoList = new ArrayList<>();
   private int thisPeerIndex;
+
+  public synchronized boolean checkAllPeersHaveFile() {
+    for (PeerInfo p : peerInfoList) {
+      if (p.hasFile == false) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   public void setThisPeerIndex(int i) {
     thisPeerIndex = i;

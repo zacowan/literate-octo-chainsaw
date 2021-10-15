@@ -10,6 +10,13 @@ public class peerProcess {
     // args[0] = peerID
     String peerID = args[0];
 
+    // Initialize debug logger
+    DebugLogger.instance = new DebugLogger(peerID);
+
+    // Initialize logging to file
+    Logger.instance = new Logger(peerID);
+
+    // Initialize common config class
     CommonConfig.instance = new CommonConfig();
     CommonConfig cc = CommonConfig.instance;
 
@@ -25,12 +32,12 @@ public class peerProcess {
       cc.pieceSize = scanner.nextLine().split(" ")[1];
       scanner.close();
     } catch (Exception e) {
-      System.out.printf("Error reading Common.cfg: %s", e.getMessage());
+      DebugLogger.instance.err("Error reading Common.cfg");
     }
 
-    SynchronizedPeerInfoList.instance = new SynchronizedPeerInfoList();
-
     // read PeerInfo.cfg
+    PeerInfoList.instance = new PeerInfoList();
+
     File peerInfoFile = new File("PeerInfo.cfg");
     try {
       Scanner scanner = new Scanner(peerInfoFile);
@@ -38,52 +45,44 @@ public class peerProcess {
       while (scanner.hasNextLine()) {
         String[] line = scanner.nextLine().split(" ");
         PeerInfo currentPeer = new PeerInfo(line[0], line[1], line[2], line[3]);
-        SynchronizedPeerInfoList.instance.addPeer(currentPeer);
+        PeerInfoList.instance.addPeer(currentPeer);
         if (currentPeer.peerID.equals(peerID)) {
-          SynchronizedPeerInfoList.instance.setThisPeerIndex(index);
+          PeerInfoList.instance.setThisPeerIndex(index);
         }
         index++;
       }
       scanner.close();
     } catch (Exception e) {
-      System.out.printf("Error reading PeerInfo.cfg: %s", e.getMessage());
+      DebugLogger.instance.err("Error reading PeerInfo.cfg");
     }
-
-    final int thisPeerIndex = SynchronizedPeerInfoList.instance.getThisPeerIndex();
-    final PeerInfo thisPeer = SynchronizedPeerInfoList.instance.getThisPeer();
-
-    // Create log file
-    Logger.instance = new Logger(thisPeer.peerID);
 
     // spawn server
+    Thread serverThread;
     try {
-      Server sv = new Server(thisPeer);
-      Thread th = new Thread(sv);
-      th.start();
+      Server sv = new Server(PeerInfoList.instance.getThisPeer());
+      serverThread = new Thread(sv);
+      serverThread.start();
     } catch (Exception e) {
-      System.out.println(e.getMessage());
+      DebugLogger.instance.err("Error creating the server thread");
     }
+
     // spawn X clients
-    for (int i = 0; i < SynchronizedPeerInfoList.instance.getSize(); i++) {
-      PeerInfo currentPeer = SynchronizedPeerInfoList.instance.getPeer(i);
+    ArrayList<Thread> clientThreads = new ArrayList<>();
+    final int thisPeerIndex = PeerInfoList.instance.getThisPeerIndex();
+    for (int i = 0; i < PeerInfoList.instance.getSize(); i++) {
+      PeerInfo currentPeer = PeerInfoList.instance.getPeer(i);
       if (i != thisPeerIndex) {
-        Client cl = new Client(thisPeer, currentPeer);
-        Thread th = new Thread(cl);
-        th.start();
+        try {
+          Client cl = new Client(PeerInfoList.instance.getThisPeer(), currentPeer);
+          Thread th = new Thread(cl);
+          clientThreads.add(th);
+          th.start();
+        } catch (Exception e) {
+          DebugLogger.instance.err("Error creating client %d", i);
+        }
       } else {
         break;
       }
     }
-
-    // peerList of all peers
-    // while (peers.notHaveFile) wait
-    // when (peers.haveFile) terminate
-
-    // Close the log file
-    // Logger.instance.closeLogFile();
   }
-
-  // set parameters
-  // start server
-  // connect clients to other peers if there
 }

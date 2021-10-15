@@ -13,14 +13,14 @@ public class Server implements Runnable {
 	}
 
 	public void run() {
-		System.out.printf("Server for peer %s is running at %s:%s.\n", hostInfo.peerID, hostInfo.hostname, hostInfo.port);
+		DebugLogger.instance.log("Server is running at %s:%s", hostInfo.hostname, hostInfo.port);
 		try {
 			ServerSocket listener = new ServerSocket(Integer.parseInt(hostInfo.port));
 			int clientNum = 1;
 			try {
 				while (true) {
 					new Handler(listener.accept(), clientNum, hostInfo).start();
-					System.out.println("Client " + clientNum + " is connected!");
+					DebugLogger.instance.log("Client %d is connected", clientNum);
 					clientNum++;
 				}
 			} finally {
@@ -60,48 +60,48 @@ public class Server implements Runnable {
 				// Perform handshake
 				String peerID = msgHandler.receiveHandshakeServer(in);
 				if (peerID != null) {
-					System.out.printf("Peer %s connected.\n", peerID);
 					Logger.instance.logTCPConnectionFrom(peerID);
 					msgHandler.sendHandshake(out, peerID);
+					DebugLogger.instance.log("Handshake completed");
 
-					while (true) {
+					while (PeerInfoList.instance.checkAllPeersHaveFile() == false) {
 						// Wait for message
 						Message received = msgHandler.receiveMessage(in);
+						DebugLogger.instance.log("Received %s message", received.type.toString());
 
 						// Handle the received message
 						switch (received.type) {
 							case BITFIELD:
-								System.out.println("Received bitfield.");
 								// TODO: store bitfield in list of peers
 
 								// TODO: add bitfield to payload
 								Message toSend = new Message(MessageType.BITFIELD, null);
 								msgHandler.sendMessage(out, toSend);
 							case INTERESTED:
-								System.out.println("Received interested.");
+								// TODO
 							case NOT_INTERESTED:
-								System.out.println("Received not interested.");
+								// TODO
 							case REQUEST:
-								System.out.println("Received request.");
+								// TODO
 							default:
-								System.out.println("Default case.");
+								DebugLogger.instance.log("Default case");
 						}
 					}
 
 				} else {
-					System.err.println("Handhsake failed.");
+					DebugLogger.instance.err("Handshake failed");
 				}
 			} catch (IOException ioException) {
-				System.out.println("Disconnect with Client " + no);
+				DebugLogger.instance.err("Client %d disconnected", no);
 			} finally {
 				// Close connections
 				try {
-					Logger.instance.closeLogFile();
 					in.close();
 					out.close();
 					connection.close();
+					DebugLogger.instance.log("Successfully closed server");
 				} catch (IOException ioException) {
-					System.out.println("Disconnect with Client " + no);
+					DebugLogger.instance.err("Client %d disconnected", no);
 				}
 			}
 		}
