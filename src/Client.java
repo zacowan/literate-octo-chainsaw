@@ -21,31 +21,34 @@ public class Client implements Runnable {
     try {
       // create a socket to connect to the server
       requestSocket = new Socket(targetInfo.hostname, Integer.parseInt(targetInfo.port));
-      System.out.printf("Connected to peer %s at %s:%s.\n", targetInfo.peerID, targetInfo.hostname, targetInfo.port);
+      DebugLogger.instance.log("Opened socket to %s:%s", targetInfo.hostname, targetInfo.port);
+
       // initialize inputStream and outputStream
       out = new ObjectOutputStream(requestSocket.getOutputStream());
       out.flush();
       in = new ObjectInputStream(requestSocket.getInputStream());
 
+      // Initialize message handler
       MessageHandler msgHandler = new MessageHandler();
 
       // Perform handshake
       msgHandler.sendHandshake(out, hostInfo.peerID);
       boolean checkHandshake = msgHandler.receiveHandshakeClient(in, hostInfo.peerID);
+
       if (checkHandshake) {
+        DebugLogger.instance.log("Handshake valid");
         Logger.instance.logTCPConnectionTo(targetInfo.peerID);
-        System.out.println("Handshake successful.");
 
         // TODO: send bitfield message
 
         while (true) {
           // Wait for message
           Message received = msgHandler.receiveMessage(in);
+          DebugLogger.instance.log("Received %s message", received.type.toString());
 
           // Handle the received message
           switch (received.type) {
             case BITFIELD:
-              System.out.println("Received bitfield.");
               // TODO: inspect bitfield, compare with what host needs
               boolean interested = true;
               if (interested) {
@@ -56,22 +59,22 @@ public class Client implements Runnable {
                 msgHandler.sendMessage(out, toSend);
               }
             case CHOKE:
-              System.out.println("Received choke.");
+              // TODO
             case UNCHOKE:
-              System.out.println("Received unchoke.");
+              // TODO
             case PIECE:
-              System.out.println("Received piece.");
+              // TODO
             default:
-              System.out.println("Default case.");
+              DebugLogger.instance.log("Default case");
           }
         }
       } else {
-        System.err.println("Handshake failed.");
+        DebugLogger.instance.err("Handshake invalid");
       }
     } catch (ConnectException e) {
-      System.err.println("Connection refused. You need to initiate a server first.");
+      DebugLogger.instance.err("Connection refused. You need to initiate a server first.");
     } catch (UnknownHostException unknownHost) {
-      System.err.println("You are trying to connect to an unknown host!");
+      DebugLogger.instance.err("You are trying to connect to an unknown host!");
     } catch (IOException ioException) {
       ioException.printStackTrace();
     } finally {

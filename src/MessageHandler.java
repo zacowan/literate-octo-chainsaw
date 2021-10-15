@@ -13,10 +13,10 @@ public class MessageHandler {
       String peerID = received.substring(HANDSHAKE_PREFIX.length());
       return peerID;
     } catch (IOException e) {
-      System.err.println("[receiveHandshake]: IO exception.");
+      DebugLogger.instance.err(e.getMessage());
       e.printStackTrace();
     } catch (ClassNotFoundException e) {
-      System.err.println("[receiveHandshake]: class not found.");
+      DebugLogger.instance.err(e.getMessage());
     }
     return null;
   }
@@ -30,10 +30,10 @@ public class MessageHandler {
         return false;
       }
     } catch (IOException e) {
-      System.err.println("[receiveHandshake]: IO exception.");
+      DebugLogger.instance.err(e.getMessage());
       e.printStackTrace();
     } catch (ClassNotFoundException e) {
-      System.err.println("[receiveHandshake]: class not found.");
+      DebugLogger.instance.err(e.getMessage());
     }
     return false;
   }
@@ -44,7 +44,7 @@ public class MessageHandler {
       out.writeObject(message);
       out.flush();
     } catch (Exception e) {
-      System.err.println(e.getMessage());
+      DebugLogger.instance.err(e.getMessage());
     }
   }
 
@@ -54,7 +54,7 @@ public class MessageHandler {
       out.writeObject(message);
       out.flush();
     } catch (Exception e) {
-      System.err.println(e.getMessage());
+      DebugLogger.instance.err(e.getMessage());
     }
   }
 
@@ -63,10 +63,10 @@ public class MessageHandler {
       String received = (String) in.readObject();
       return new Message(MessageType.INTERESTED, null);
     } catch (IOException e) {
-      System.err.println("[receiveHandshake]: IO exception.");
+      DebugLogger.instance.err(e.getMessage());
       e.printStackTrace();
     } catch (ClassNotFoundException e) {
-      System.err.println("[receiveHandshake]: class not found.");
+      DebugLogger.instance.err(e.getMessage());
     }
     return null;
   }

@@ -29,7 +29,7 @@ public class Logger {
     try {
       writer.close();
     } catch (IOException e) {
-      System.err.printf("Error closing log file, %s\n", e.getMessage());
+      DebugLogger.instance.err(e.getMessage());
     }
   }
 
@@ -38,7 +38,7 @@ public class Logger {
       File file = new File(filename);
       writer = new FileWriter(file.getName());
     } catch (IOException e) {
-      System.err.printf("Error creating log file, %s\n", e.getMessage());
+      DebugLogger.instance.err(e.getMessage());
     }
   }
 
@@ -46,7 +46,7 @@ public class Logger {
     try {
       writer.write(log + ".");
     } catch (IOException e) {
-      System.err.printf("Error writing to log file, %s\n", e.getMessage());
+      DebugLogger.instance.err(e.getMessage());
     }
   }
 
