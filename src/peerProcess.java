@@ -10,8 +10,13 @@ public class peerProcess {
     // args[0] = peerID
     String peerID = args[0];
 
+    // Initialize debug logger
     DebugLogger.instance = new DebugLogger(peerID);
 
+    // Initialize logging to file
+    Logger.instance = new Logger(peerID);
+
+    // Initialize common config class
     CommonConfig.instance = new CommonConfig();
     CommonConfig cc = CommonConfig.instance;
 
@@ -30,9 +35,9 @@ public class peerProcess {
       DebugLogger.instance.err("Error reading Common.cfg");
     }
 
+    // read PeerInfo.cfg
     PeerInfoList.instance = new PeerInfoList();
 
-    // read PeerInfo.cfg
     File peerInfoFile = new File("PeerInfo.cfg");
     try {
       Scanner scanner = new Scanner(peerInfoFile);
@@ -51,27 +56,26 @@ public class peerProcess {
       DebugLogger.instance.err("Error reading PeerInfo.cfg");
     }
 
-    final int thisPeerIndex = PeerInfoList.instance.getThisPeerIndex();
-    final PeerInfo thisPeer = PeerInfoList.instance.getThisPeer();
-
-    // Create log file
-    Logger.instance = new Logger(thisPeer.peerID);
-
     // spawn server
+    Thread serverThread;
     try {
-      Server sv = new Server(thisPeer);
-      Thread th = new Thread(sv);
-      th.start();
+      Server sv = new Server(PeerInfoList.instance.getThisPeer());
+      serverThread = new Thread(sv);
+      serverThread.start();
     } catch (Exception e) {
       DebugLogger.instance.err("Error creating the server thread");
     }
+
     // spawn X clients
+    ArrayList<Thread> clientThreads = new ArrayList<>();
+    final int thisPeerIndex = PeerInfoList.instance.getThisPeerIndex();
     for (int i = 0; i < PeerInfoList.instance.getSize(); i++) {
       PeerInfo currentPeer = PeerInfoList.instance.getPeer(i);
       if (i != thisPeerIndex) {
         try {
-          Client cl = new Client(thisPeer, currentPeer);
+          Client cl = new Client(PeerInfoList.instance.getThisPeer(), currentPeer);
           Thread th = new Thread(cl);
+          clientThreads.add(th);
           th.start();
         } catch (Exception e) {
           DebugLogger.instance.err("Error creating client %d", i);
@@ -80,16 +84,5 @@ public class peerProcess {
         break;
       }
     }
-
-    // peerList of all peers
-    // while (peers.notHaveFile) wait
-    // when (peers.haveFile) terminate
-
-    // Close the log file
-    // Logger.instance.closeLogFile();
   }
-
-  // set parameters
-  // start server
-  // connect clients to other peers if there
 }

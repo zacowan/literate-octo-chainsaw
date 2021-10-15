@@ -12,6 +12,15 @@ public class PeerInfoList {
   private final ArrayList<PeerInfo> peerInfoList = new ArrayList<>();
   private int thisPeerIndex;
 
+  public synchronized boolean checkAllPeersHaveFile() {
+    for (PeerInfo p : peerInfoList) {
+      if (p.hasFile == false) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   public void setThisPeerIndex(int i) {
     thisPeerIndex = i;
   }

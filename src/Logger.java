@@ -25,7 +25,7 @@ public class Logger {
     createLogFile(filename);
   }
 
-  public void closeLogFile() {
+  private void closeWriter() {
     try {
       writer.close();
     } catch (IOException e) {
@@ -34,19 +34,25 @@ public class Logger {
   }
 
   private void createLogFile(String path) {
+    new File(filename);
     try {
-      File file = new File(filename);
-      writer = new FileWriter(file.getName());
+      writer = new FileWriter(filename);
+      writer.write("");
     } catch (IOException e) {
       DebugLogger.instance.err(e.getMessage());
+    } finally {
+      closeWriter();
     }
   }
 
   private void writeLogToFile(String log) {
     try {
-      writer.write(log + ".");
+      writer = new FileWriter(filename);
+      writer.append(log + ".\n");
     } catch (IOException e) {
       DebugLogger.instance.err(e.getMessage());
+    } finally {
+      closeWriter();
     }
   }
 

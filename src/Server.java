@@ -64,7 +64,7 @@ public class Server implements Runnable {
 					msgHandler.sendHandshake(out, peerID);
 					DebugLogger.instance.log("Handshake completed");
 
-					while (true) {
+					while (PeerInfoList.instance.checkAllPeersHaveFile() == false) {
 						// Wait for message
 						Message received = msgHandler.receiveMessage(in);
 						DebugLogger.instance.log("Received %s message", received.type.toString());
@@ -96,10 +96,10 @@ public class Server implements Runnable {
 			} finally {
 				// Close connections
 				try {
-					Logger.instance.closeLogFile();
 					in.close();
 					out.close();
 					connection.close();
+					DebugLogger.instance.log("Successfully closed server");
 				} catch (IOException ioException) {
 					DebugLogger.instance.err("Client %d disconnected", no);
 				}

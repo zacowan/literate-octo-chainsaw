@@ -41,7 +41,7 @@ public class Client implements Runnable {
 
         // TODO: send bitfield message
 
-        while (true) {
+        while (PeerInfoList.instance.getThisPeer().hasFile == false) {
           // Wait for message
           Message received = msgHandler.receiveMessage(in);
           DebugLogger.instance.log("Received %s message", received.type.toString());
@@ -80,10 +80,10 @@ public class Client implements Runnable {
     } finally {
       // Close connections
       try {
-        Logger.instance.closeLogFile();
         in.close();
         out.close();
         requestSocket.close();
+        DebugLogger.instance.log("Successfully closed client for %s", hostInfo.peerID);
       } catch (IOException ioException) {
         ioException.printStackTrace();
       }
