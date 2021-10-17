@@ -60,6 +60,7 @@ public class Server implements Runnable {
 				// Perform handshake
 				String peerID = msgHandler.receiveHandshakeServer(in);
 				if (peerID != null) {
+					// Create an item in ConnectedClientsList
 					Logger.instance.logTCPConnectionFrom(peerID);
 					msgHandler.sendHandshake(out, peerID);
 					DebugLogger.instance.log("Handshake completed");

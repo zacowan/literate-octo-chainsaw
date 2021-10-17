@@ -84,5 +84,12 @@ public class peerProcess {
         break;
       }
     }
+
+    // ConnectedClientsList
+    // while (clients are connected)
+    // set some timer
+    // wait until timer is done
+    // Check list of connected clients
+    // Determine preferred neighbors + optimistically unchoked neighbor
   }
 }
