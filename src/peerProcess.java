@@ -17,8 +17,7 @@ public class peerProcess {
     Logger.instance = new Logger(peerID);
 
     // Initialize common config class
-    CommonConfig.instance = new CommonConfig();
-    CommonConfig cc = CommonConfig.instance;
+    CommonConfig cc = new CommonConfig();
 
     // read Common.cfg
     File commonFile = new File("Common.cfg");
@@ -86,14 +85,7 @@ public class peerProcess {
     }
 
     // Initialize piece storage
-    int numPieces = Integer.parseInt(CommonConfig.instance.fileSize)
-        / Integer.parseInt(CommonConfig.instance.pieceSize);
-    int pieceSize = Integer.parseInt(CommonConfig.instance.pieceSize);
-    if (PeerInfoList.instance.getThisPeer().hasFile) {
-      PieceStorage.instance = new PieceStorage(numPieces, pieceSize, CommonConfig.instance.fileName);
-    } else {
-      PieceStorage.instance = new PieceStorage(numPieces);
-    }
+    PieceStorage.instance = new PieceStorage(cc, PeerInfoList.instance.getThisPeer().hasFile);
 
     // ConnectedClientsList
     // while (clients are connected)
