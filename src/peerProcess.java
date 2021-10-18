@@ -85,6 +85,13 @@ public class peerProcess {
       }
     }
 
+    // Initialize piece storage
+    if (PeerInfoList.instance.getThisPeer().hasFile) {
+      PieceStorage.instance = new PieceStorage(CommonConfig.instance.fileName);
+    } else {
+      PieceStorage.instance = new PieceStorage();
+    }
+
     // ConnectedClientsList
     // while (clients are connected)
     // set some timer

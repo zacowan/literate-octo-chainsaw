@@ -13,7 +13,8 @@ public class PeerInfo {
     this.hostname = hostname;
     this.port = port;
     // All pieces should be here if the peer starts with a file
-    this.hasFile = Boolean.parseBoolean(hasFile);
+    int hasFileInt = Integer.parseInt(hasFile);
+    this.hasFile = hasFileInt == 1 ? true : false;
   }
 
   // TODO: implement compare method

@@ -22,7 +22,7 @@ public class Logger {
   public Logger(String hostID) {
     this.hostID = hostID;
     this.filename = "peer_log_" + hostID + ".log";
-    createLogFile(filename);
+    createLogFile();
   }
 
   private void closeWriter() {
@@ -33,7 +33,7 @@ public class Logger {
     }
   }
 
-  private void createLogFile(String path) {
+  private void createLogFile() {
     new File(filename);
     try {
       writer = new FileWriter(filename);

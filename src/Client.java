@@ -12,9 +12,12 @@ public class Client implements Runnable {
   PeerInfo hostInfo;
   PeerInfo targetInfo;
 
+  MessageHandler msgHandler;
+
   public Client(PeerInfo hostInfo, PeerInfo targetInfo) {
     this.hostInfo = hostInfo;
     this.targetInfo = targetInfo;
+    this.msgHandler = new MessageHandler();
   }
 
   public void run() {
@@ -27,9 +30,6 @@ public class Client implements Runnable {
       out = new ObjectOutputStream(requestSocket.getOutputStream());
       out.flush();
       in = new ObjectInputStream(requestSocket.getInputStream());
-
-      // Initialize message handler
-      MessageHandler msgHandler = new MessageHandler();
 
       // Perform handshake
       msgHandler.sendHandshake(out, hostInfo.peerID);
@@ -49,21 +49,13 @@ public class Client implements Runnable {
           // Handle the received message
           switch (received.type) {
             case BITFIELD:
-              // TODO: inspect bitfield, compare with what host needs
-              boolean interested = true;
-              if (interested) {
-                Message toSend = new Message(MessageType.INTERESTED, null);
-                msgHandler.sendMessage(out, toSend);
-              } else {
-                Message toSend = new Message(MessageType.NOT_INTERESTED, null);
-                msgHandler.sendMessage(out, toSend);
-              }
+              handleBitfieldReceived(received);
             case CHOKE:
               // TODO
             case UNCHOKE:
               // TODO
             case PIECE:
-              // TODO
+              handlePieceReceived(received);
             default:
               DebugLogger.instance.log("Default case");
           }
@@ -88,5 +80,24 @@ public class Client implements Runnable {
         ioException.printStackTrace();
       }
     }
+  }
+
+  private void handleBitfieldReceived(Message received) {
+    // TODO: inspect bitfield, compare with what host needs
+    boolean interested = true;
+    if (interested) {
+      Message toSend = new Message(MessageType.INTERESTED, null);
+      msgHandler.sendMessage(out, toSend);
+    } else {
+      Message toSend = new Message(MessageType.NOT_INTERESTED, null);
+      msgHandler.sendMessage(out, toSend);
+    }
+  }
+
+  private void handlePieceReceived(Message received) {
+    // Store piece in data structure
+    // Update bitfield
+    // Send "have" message
+    // Send "request" message?
   }
 }
