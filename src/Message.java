@@ -4,11 +4,11 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
 
-public class Message {
+public class Message implements Serializable {
   public MessageType type;
-  public Optional<ArrayList<Byte>> payload;
+  public Object payload;
 
-  public Message(MessageType type, Optional<ArrayList<Byte>> payload) {
+  public Message(MessageType type, Object payload) {
     this.type = type;
     this.payload = payload;
   }

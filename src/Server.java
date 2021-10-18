@@ -40,12 +40,16 @@ public class Server implements Runnable {
 		private ObjectInputStream in; // stream read from the socket
 		private ObjectOutputStream out; // stream write to the socket
 		private int no; // The index number of the client
+
 		private PeerInfo hostInfo;
+
+		private MessageHandler msgHandler;
 
 		public Handler(Socket connection, int no, PeerInfo hostInfo) {
 			this.connection = connection;
 			this.no = no;
 			this.hostInfo = hostInfo;
+			this.msgHandler = new MessageHandler();
 		}
 
 		public void run() {
@@ -54,8 +58,6 @@ public class Server implements Runnable {
 				out = new ObjectOutputStream(connection.getOutputStream());
 				out.flush();
 				in = new ObjectInputStream(connection.getInputStream());
-
-				MessageHandler msgHandler = new MessageHandler();
 
 				// Perform handshake
 				String peerID = msgHandler.receiveHandshakeServer(in);
@@ -73,17 +75,13 @@ public class Server implements Runnable {
 						// Handle the received message
 						switch (received.type) {
 							case BITFIELD:
-								// TODO: store bitfield in list of peers
-
-								// TODO: add bitfield to payload
-								Message toSend = new Message(MessageType.BITFIELD, null);
-								msgHandler.sendMessage(out, toSend);
+								handleBitfieldReceived(received);
 							case INTERESTED:
 								// TODO
 							case NOT_INTERESTED:
 								// TODO
 							case REQUEST:
-								// TODO
+								handleRequestReceived(received);
 							default:
 								DebugLogger.instance.log("Default case");
 						}
@@ -107,6 +105,20 @@ public class Server implements Runnable {
 			}
 		}
 
+		private void handleBitfieldReceived(Message received) {
+			// TODO: store bitfield in list of peers
+
+			// TODO: add bitfield to payload
+			Message toSend = new Message(MessageType.BITFIELD, null);
+			msgHandler.sendMessage(out, toSend);
+		}
+
+		private void handleRequestReceived(Message received) {
+			int index = (int) received.payload;
+			byte[] piece = PieceStorage.instance.getPiece(index);
+			Message toSend = new Message(MessageType.PIECE, new PiecePayload(index, piece));
+			msgHandler.sendMessage(out, toSend);
+		}
 	}
 
 }

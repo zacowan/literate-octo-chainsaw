@@ -49,9 +49,8 @@ public class MessageHandler {
   }
 
   public void sendMessage(ObjectOutputStream out, Message msg) {
-    String message = "test message";
     try {
-      out.writeObject(message);
+      out.writeObject(msg);
       out.flush();
     } catch (Exception e) {
       DebugLogger.instance.err(e.getMessage());
@@ -60,8 +59,7 @@ public class MessageHandler {
 
   public Message receiveMessage(ObjectInputStream in) {
     try {
-      String received = (String) in.readObject();
-      return new Message(MessageType.INTERESTED, null);
+      return (Message) in.readObject();
     } catch (IOException e) {
       DebugLogger.instance.err(e.getMessage());
       e.printStackTrace();

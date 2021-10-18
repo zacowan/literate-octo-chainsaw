@@ -96,8 +96,17 @@ public class Client implements Runnable {
 
   private void handlePieceReceived(Message received) {
     // Store piece in data structure
-    // Update bitfield
+    PiecePayload payload = (PiecePayload) received.payload;
+    PieceStorage.instance.setPiece(payload.index, payload.data);
+    // TODO: Update bitfield
     // Send "have" message
+    // TODO: change null to bitfield
+    Message toSend = new Message(MessageType.HAVE, null);
+    msgHandler.sendMessage(out, toSend);
+    msgHandler.receiveMessage(in);
     // Send "request" message?
+    // TODO: determine index based on inspecting bitfield
+    toSend = new Message(MessageType.REQUEST, 1);
+    msgHandler.sendMessage(out, toSend);
   }
 }

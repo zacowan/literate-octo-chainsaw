@@ -86,10 +86,13 @@ public class peerProcess {
     }
 
     // Initialize piece storage
+    int numPieces = Integer.parseInt(CommonConfig.instance.fileSize)
+        / Integer.parseInt(CommonConfig.instance.pieceSize);
+    int pieceSize = Integer.parseInt(CommonConfig.instance.pieceSize);
     if (PeerInfoList.instance.getThisPeer().hasFile) {
-      PieceStorage.instance = new PieceStorage(CommonConfig.instance.fileName);
+      PieceStorage.instance = new PieceStorage(numPieces, pieceSize, CommonConfig.instance.fileName);
     } else {
-      PieceStorage.instance = new PieceStorage();
+      PieceStorage.instance = new PieceStorage(numPieces);
     }
 
     // ConnectedClientsList

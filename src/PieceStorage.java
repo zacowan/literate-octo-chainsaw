@@ -7,27 +7,32 @@ import java.util.*;
 public class PieceStorage {
   public static PieceStorage instance = null;
 
-  public ArrayList<byte[]> downloaded;
+  private HashMap<Integer, byte[]> downloaded;
 
-  public PieceStorage() {
-    this.downloaded = new ArrayList<>();
+  public synchronized byte[] getPiece(int index) {
+    return downloaded.get(index);
   }
 
-  public PieceStorage(String filePath) {
-    this.downloaded = new ArrayList<>();
+  public synchronized void setPiece(int index, byte[] data) {
+    downloaded.put(index, data);
+  }
+
+  public PieceStorage(int numPieces) {
+    this.downloaded = new HashMap<Integer, byte[]>(numPieces);
+  }
+
+  public PieceStorage(int numPieces, int pieceSize, String filePath) {
+    this.downloaded = new HashMap<Integer, byte[]>(numPieces);
     // Open file and update downloaded with file data
     try {
       InputStream in = new FileInputStream(filePath);
       // 1 char = 2 bytes
       // Read pieceSize / 2 characters, pieceNum times
-      int length = Integer.parseInt(CommonConfig.instance.pieceSize);
-      int numPieces = Integer.parseInt(CommonConfig.instance.fileSize)
-          / Integer.parseInt(CommonConfig.instance.pieceSize) + 1;
       for (int i = 0; i < numPieces; i++) {
         try {
-          byte[] piece = new byte[length];
-          in.read(piece, 0, length);
-          downloaded.add(piece);
+          byte[] piece = new byte[pieceSize];
+          in.read(piece, 0, pieceSize);
+          downloaded.put(i, piece);
         } catch (IOException e) {
           DebugLogger.instance.err("Error reading piece %d from file, %s", i, e.getMessage());
         }
