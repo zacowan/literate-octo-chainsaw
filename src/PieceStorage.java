@@ -18,7 +18,7 @@ public class PieceStorage {
   }
 
   public PieceStorage(CommonConfig config, boolean hasFile) {
-    int numPieces = Integer.parseInt(config.fileSize) / Integer.parseInt(config.pieceSize);
+    int numPieces = (int) Math.ceil(Double.parseDouble(config.fileSize) / Double.parseDouble(config.pieceSize));
     int pieceSize = Integer.parseInt(config.pieceSize);
 
     if (!hasFile) {
