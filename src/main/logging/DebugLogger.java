@@ -28,5 +28,6 @@ public class DebugLogger {
   public void err(String msg, Object... args) {
     String formatted = String.format(msg, args);
     System.err.printf("[Peer %s:%s] %s\n", peerID, getClassMethodName(), formatted);
+    System.exit(-1);
   }
 }

@@ -9,6 +9,9 @@ import main.logging.*;
 
 public class peerProcess {
 
+  private static final String CC_FILENAME = "Common.cfg";
+  private static final String PI_FILENAME = "PeerInfo.cfg";
+
   public static void main(String args[]) {
     // args[0] = peerID
     String peerID = args[0];
@@ -23,7 +26,7 @@ public class peerProcess {
     CommonConfig cc = new CommonConfig();
 
     // read Common.cfg
-    File commonFile = new File("Common.cfg");
+    File commonFile = new File(CC_FILENAME);
     try {
       Scanner scanner = new Scanner(commonFile);
       cc.numberOfPreferredNeighbors = scanner.nextLine().split(" ")[1];
@@ -33,14 +36,16 @@ public class peerProcess {
       cc.fileSize = scanner.nextLine().split(" ")[1];
       cc.pieceSize = scanner.nextLine().split(" ")[1];
       scanner.close();
+    } catch (FileNotFoundException e) {
+      DebugLogger.instance.err("%s file was not found", CC_FILENAME);
     } catch (Exception e) {
-      DebugLogger.instance.err("Error reading Common.cfg");
+      DebugLogger.instance.err("Error parsing %s file", CC_FILENAME);
     }
 
     // read PeerInfo.cfg
     PeerInfoList.instance = new PeerInfoList();
 
-    File peerInfoFile = new File("PeerInfo.cfg");
+    File peerInfoFile = new File(PI_FILENAME);
     try {
       Scanner scanner = new Scanner(peerInfoFile);
       int index = 0;
@@ -54,8 +59,10 @@ public class peerProcess {
         index++;
       }
       scanner.close();
+    } catch (FileNotFoundException e) {
+      DebugLogger.instance.err("%s file was not found", PI_FILENAME);
     } catch (Exception e) {
-      DebugLogger.instance.err("Error reading PeerInfo.cfg");
+      DebugLogger.instance.err("Error parsing %s file", PI_FILENAME);
     }
 
     // spawn server
@@ -65,7 +72,7 @@ public class peerProcess {
       serverThread = new Thread(sv);
       serverThread.start();
     } catch (Exception e) {
-      DebugLogger.instance.err("Error creating the server thread");
+      DebugLogger.instance.err("Failed to start the server thread");
     }
 
     // spawn X clients
@@ -80,7 +87,7 @@ public class peerProcess {
           clientThreads.add(th);
           th.start();
         } catch (Exception e) {
-          DebugLogger.instance.err("Error creating client %d", i);
+          DebugLogger.instance.err("Error creating client thread %d", i);
         }
       } else {
         break;
