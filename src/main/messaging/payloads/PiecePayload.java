@@ -1,12 +1,16 @@
+package main.messaging.payloads;
+
 import java.net.*;
 import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
 
-public class PiecePayload {
-  int index;
-  byte[] data;
+import main.Utils;
+
+public class PiecePayload extends Payload {
+  public int index;
+  public byte[] data;
 
   public PiecePayload(int index, byte[] data) {
     this.data = data;

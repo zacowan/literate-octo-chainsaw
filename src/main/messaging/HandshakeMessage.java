@@ -1,8 +1,13 @@
+package main.messaging;
+
 import java.net.*;
 import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
+
+import main.logging.*;
+import main.Utils;
 
 public class HandshakeMessage {
   // 18 bytes

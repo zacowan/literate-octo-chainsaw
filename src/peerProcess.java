@@ -4,6 +4,9 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
 
+import main.*;
+import main.logging.*;
+
 public class peerProcess {
 
   public static void main(String args[]) {
@@ -14,7 +17,7 @@ public class peerProcess {
     DebugLogger.instance = new DebugLogger(peerID);
 
     // Initialize logging to file
-    Logger.instance = new Logger(peerID);
+    FileLogger.instance = new FileLogger(peerID);
 
     // Initialize common config class
     CommonConfig cc = new CommonConfig();

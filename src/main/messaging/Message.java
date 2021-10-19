@@ -1,18 +1,33 @@
+package main.messaging;
+
 import java.net.*;
 import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
 
-public class Message implements Serializable {
-  public int length;
-  public MessageType type;
-  public byte[] payload;
+import main.logging.*;
+import main.messaging.payloads.Payload;
+import main.messaging.payloads.PiecePayload;
+import main.messaging.payloads.RequestPayload;
+import main.Utils;
 
-  public Message(int length, MessageType type, byte[] payload) {
+public class Message {
+  // 4 bytes
+  public int length;
+  // 1 byte
+  public MessageType type;
+  // this.length bytes
+  private byte[] payload;
+
+  public Message(int length, MessageType type, Payload payload) {
     this.length = length;
     this.type = type;
-    this.payload = payload;
+    if (payload != null) {
+      this.payload = payload.getBytes();
+    } else {
+      this.payload = null;
+    }
   }
 
   public Message(byte[] bytes) {
@@ -66,6 +81,17 @@ public class Message implements Serializable {
     default:
       DebugLogger.instance.err("Error determining message type");
       break;
+    }
+  }
+
+  public Payload getPayload() {
+    switch (type) {
+    case REQUEST:
+      return new RequestPayload(payload);
+    case PIECE:
+      return new PiecePayload(payload);
+    default:
+      return null;
     }
   }
 

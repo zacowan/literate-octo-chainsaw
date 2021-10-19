@@ -1,8 +1,12 @@
+package main;
+
 import java.net.*;
 import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
+
+import main.logging.*;
 
 public class PieceStorage {
   public static PieceStorage instance = null;

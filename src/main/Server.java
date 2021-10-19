@@ -1,8 +1,14 @@
+package main;
+
 import java.net.*;
 import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
+
+import main.logging.*;
+import main.messaging.*;
+import main.messaging.payloads.*;
 
 public class Server implements Runnable {
 
@@ -65,7 +71,7 @@ public class Server implements Runnable {
 				this.connectedInfo = PeerInfoList.instance.getPeer(peerID);
 				if (this.connectedInfo != null) {
 					// Create an item in ConnectedClientsList
-					Logger.instance.logTCPConnectionFrom(peerID);
+					FileLogger.instance.logTCPConnectionFrom(peerID);
 					msgHandler.sendHandshake(out, hostInfo.peerID);
 					DebugLogger.instance.log("Handshake completed");
 
@@ -116,14 +122,13 @@ public class Server implements Runnable {
 			// TODO: store bitfield in list of peers
 
 			// TODO: add bitfield to payload
-			msgHandler.sendMessage(out, 0, MessageType.BITFIELD, null);
+			msgHandler.sendMessage(out, MessageType.BITFIELD, new EmptyPayload());
 		}
 
 		private void handleRequestReceived(Message received) {
-			RequestPayload requestPayload = new RequestPayload(received.payload);
-			byte[] piece = PieceStorage.instance.getPiece(requestPayload.index);
-			PiecePayload piecePayload = new PiecePayload(requestPayload.index, piece);
-			msgHandler.sendMessage(out, piecePayload.getLength(), MessageType.PIECE, piecePayload.getBytes());
+			RequestPayload payload = (RequestPayload) received.getPayload();
+			byte[] piece = PieceStorage.instance.getPiece(payload.index);
+			msgHandler.sendMessage(out, MessageType.PIECE, new PiecePayload(payload.index, piece));
 		}
 	}
 

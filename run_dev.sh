@@ -1,5 +1,5 @@
 #!/bin/bash
-javac -d _build_ src/*.java
+javac -d _build_ src/*.java src/main/*.java src/main/logging/*.java src/main/messaging/*.java src/main/messaging/payloads/*.java
 cp test/*.cfg _build_
 cp test/thefile _build_
 

@@ -1,12 +1,14 @@
+package main;
+
 public class PeerInfo {
-  String peerID;
-  String hostname;
-  String port;
+  public String peerID;
+  public String hostname;
+  public String port;
   // boolean should be a bitfield
   // Java BitSet ??
   // HOw many total pieces
   // How many pieces we have
-  boolean hasFile;
+  public boolean hasFile;
 
   public PeerInfo(String peerID, String hostname, String port, String hasFile) {
     this.peerID = peerID;

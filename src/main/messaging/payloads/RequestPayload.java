@@ -1,11 +1,15 @@
+package main.messaging.payloads;
+
 import java.net.*;
 import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
 
-public class RequestPayload {
-  int index;
+import main.Utils;
+
+public class RequestPayload extends Payload {
+  public int index;
 
   public RequestPayload(int index) {
     this.index = index;

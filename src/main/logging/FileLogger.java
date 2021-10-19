@@ -1,10 +1,12 @@
+package main.logging;
+
 import java.net.*;
 import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
 
-public class Logger {
+public class FileLogger {
   // Created in peerProcess
   // Singleton?
   // Thread-safe (synchronized)
@@ -13,13 +15,13 @@ public class Logger {
   // Method for opening/closing file
   // Ask about constantly writing to file, or writing to file at end
 
-  public static Logger instance = null;
+  public static FileLogger instance = null;
 
   private String hostID;
   private String filename;
   private FileWriter writer;
 
-  public Logger(String hostID) {
+  public FileLogger(String hostID) {
     this.hostID = hostID;
     this.filename = "peer_log_" + hostID + ".log";
     createLogFile();

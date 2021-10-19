@@ -1,8 +1,13 @@
+package main.messaging;
+
 import java.net.*;
 import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
+
+import main.logging.*;
+import main.messaging.payloads.Payload;
 
 public class MessageHandler {
   public String receiveHandshakeServer(ObjectInputStream in) {
@@ -52,8 +57,8 @@ public class MessageHandler {
     }
   }
 
-  public void sendMessage(ObjectOutputStream out, int length, MessageType type, byte[] payload) {
-    Message msg = new Message(length, type, payload);
+  public void sendMessage(ObjectOutputStream out, MessageType type, Payload payload) {
+    Message msg = new Message(payload.getLength(), type, payload);
     try {
       out.writeObject(msg.getBytes());
       out.flush();
