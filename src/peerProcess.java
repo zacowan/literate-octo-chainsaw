@@ -36,10 +36,8 @@ public class peerProcess {
       cc.fileSize = scanner.nextLine().split(" ")[1];
       cc.pieceSize = scanner.nextLine().split(" ")[1];
       scanner.close();
-    } catch (FileNotFoundException e) {
-      DebugLogger.instance.err("%s file was not found", CC_FILENAME);
     } catch (Exception e) {
-      DebugLogger.instance.err("Error parsing %s file", CC_FILENAME);
+      DebugLogger.instance.err("Error parsing %s file, %s", CC_FILENAME, e.getMessage());
     }
 
     // read PeerInfo.cfg
@@ -59,10 +57,8 @@ public class peerProcess {
         index++;
       }
       scanner.close();
-    } catch (FileNotFoundException e) {
-      DebugLogger.instance.err("%s file was not found", PI_FILENAME);
     } catch (Exception e) {
-      DebugLogger.instance.err("Error parsing %s file", PI_FILENAME);
+      DebugLogger.instance.err("Error parsing %s file, %s", PI_FILENAME, e.getMessage());
     }
 
     // spawn server
@@ -72,7 +68,7 @@ public class peerProcess {
       serverThread = new Thread(sv);
       serverThread.start();
     } catch (Exception e) {
-      DebugLogger.instance.err("Failed to start the server thread");
+      DebugLogger.instance.err("Failed to start the server thread, %s", e.getMessage());
     }
 
     // spawn X clients
@@ -87,7 +83,7 @@ public class peerProcess {
           clientThreads.add(th);
           th.start();
         } catch (Exception e) {
-          DebugLogger.instance.err("Error creating client thread %d", i);
+          DebugLogger.instance.err("Error creating client thread %d, %s", i, e.getMessage());
         }
       } else {
         break;
