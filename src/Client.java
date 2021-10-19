@@ -48,16 +48,21 @@ public class Client implements Runnable {
 
           // Handle the received message
           switch (received.type) {
-            case BITFIELD:
-              handleBitfieldReceived(received);
-            case CHOKE:
-              // TODO
-            case UNCHOKE:
-              // TODO
-            case PIECE:
-              handlePieceReceived(received);
-            default:
-              DebugLogger.instance.log("Default case");
+          case BITFIELD:
+            handleBitfieldReceived(received);
+            break;
+          case CHOKE:
+            // TODO
+            break;
+          case UNCHOKE:
+            // TODO
+            break;
+          case PIECE:
+            handlePieceReceived(received);
+            break;
+          default:
+            DebugLogger.instance.log("Default case");
+            break;
           }
         }
       } else {
@@ -86,27 +91,24 @@ public class Client implements Runnable {
     // TODO: inspect bitfield, compare with what host needs
     boolean interested = true;
     if (interested) {
-      Message toSend = new Message(MessageType.INTERESTED, null);
-      msgHandler.sendMessage(out, toSend);
+      msgHandler.sendMessage(out, 0, MessageType.INTERESTED, null);
     } else {
-      Message toSend = new Message(MessageType.NOT_INTERESTED, null);
-      msgHandler.sendMessage(out, toSend);
+      msgHandler.sendMessage(out, 0, MessageType.NOT_INTERESTED, null);
     }
   }
 
   private void handlePieceReceived(Message received) {
     // Store piece in data structure
-    PiecePayload payload = (PiecePayload) received.payload;
-    PieceStorage.instance.setPiece(payload.index, payload.data);
+    PiecePayload piecePayload = new PiecePayload(received.payload);
+    PieceStorage.instance.setPiece(piecePayload.index, piecePayload.data);
     // TODO: Update bitfield
     // Send "have" message
     // TODO: change null to bitfield
-    Message toSend = new Message(MessageType.HAVE, null);
-    msgHandler.sendMessage(out, toSend);
+    msgHandler.sendMessage(out, 0, MessageType.HAVE, null);
     msgHandler.receiveMessage(in);
     // Send "request" message?
     // TODO: determine index based on inspecting bitfield
-    toSend = new Message(MessageType.REQUEST, 1);
-    msgHandler.sendMessage(out, toSend);
+    RequestPayload requestPayload = new RequestPayload(0);
+    msgHandler.sendMessage(out, requestPayload.getLength(), MessageType.REQUEST, requestPayload.getBytes());
   }
 }

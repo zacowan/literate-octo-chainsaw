@@ -76,16 +76,21 @@ public class Server implements Runnable {
 
 						// Handle the received message
 						switch (received.type) {
-							case BITFIELD:
-								handleBitfieldReceived(received);
-							case INTERESTED:
-								// TODO
-							case NOT_INTERESTED:
-								// TODO
-							case REQUEST:
-								handleRequestReceived(received);
-							default:
-								DebugLogger.instance.log("Default case");
+						case BITFIELD:
+							handleBitfieldReceived(received);
+							break;
+						case INTERESTED:
+							// TODO
+							break;
+						case NOT_INTERESTED:
+							// TODO
+							break;
+						case REQUEST:
+							handleRequestReceived(received);
+							break;
+						default:
+							DebugLogger.instance.log("Default case");
+							break;
 						}
 					}
 
@@ -111,15 +116,14 @@ public class Server implements Runnable {
 			// TODO: store bitfield in list of peers
 
 			// TODO: add bitfield to payload
-			Message toSend = new Message(MessageType.BITFIELD, null);
-			msgHandler.sendMessage(out, toSend);
+			msgHandler.sendMessage(out, 0, MessageType.BITFIELD, null);
 		}
 
 		private void handleRequestReceived(Message received) {
-			int index = (int) received.payload;
-			byte[] piece = PieceStorage.instance.getPiece(index);
-			Message toSend = new Message(MessageType.PIECE, new PiecePayload(index, piece));
-			msgHandler.sendMessage(out, toSend);
+			RequestPayload requestPayload = new RequestPayload(received.payload);
+			byte[] piece = PieceStorage.instance.getPiece(requestPayload.index);
+			PiecePayload piecePayload = new PiecePayload(requestPayload.index, piece);
+			msgHandler.sendMessage(out, piecePayload.getLength(), MessageType.PIECE, piecePayload.getBytes());
 		}
 	}
 
