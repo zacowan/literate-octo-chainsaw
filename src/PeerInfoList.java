@@ -45,6 +45,17 @@ public class PeerInfoList {
     return peerInfoList.get(i);
   }
 
+  public synchronized PeerInfo getPeer(String peerID) {
+    PeerInfo ret = null;
+    for (PeerInfo peer : peerInfoList) {
+      if (peer.peerID.equals(peerID)) {
+        ret = peer;
+        break;
+      }
+    }
+    return ret;
+  }
+
   public synchronized void updatePeer(int i, PeerInfo peer) {
     peerInfoList.set(i, peer);
   }

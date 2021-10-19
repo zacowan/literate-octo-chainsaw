@@ -5,13 +5,14 @@ import java.nio.channels.*;
 import java.util.*;
 
 public class MessageHandler {
-  private static final String HANDSHAKE_PREFIX = "P2PFILESHARINGPROJ0000000000";
-
   public String receiveHandshakeServer(ObjectInputStream in) {
     try {
-      String received = (String) in.readObject();
-      String peerID = received.substring(HANDSHAKE_PREFIX.length());
-      return peerID;
+      HandshakeMessage received = (HandshakeMessage) in.readObject();
+      if (received.header.equals(HandshakeMessage.HEADER) && Arrays.equals(received.zeroes, HandshakeMessage.ZEROES)) {
+        return Integer.toString(received.peerID);
+      } else {
+        return null;
+      }
     } catch (IOException e) {
       DebugLogger.instance.err(e.getMessage());
       e.printStackTrace();
@@ -23,8 +24,9 @@ public class MessageHandler {
 
   public boolean receiveHandshakeClient(ObjectInputStream in, String peerID) {
     try {
-      String received = (String) in.readObject();
-      if (received.equals(HANDSHAKE_PREFIX + peerID)) {
+      HandshakeMessage received = (HandshakeMessage) in.readObject();
+      if (received.header.equals(HandshakeMessage.HEADER) && Arrays.equals(received.zeroes, HandshakeMessage.ZEROES)
+          && received.peerID == Integer.parseInt(peerID)) {
         return true;
       } else {
         return false;
@@ -39,9 +41,9 @@ public class MessageHandler {
   }
 
   public void sendHandshake(ObjectOutputStream out, String peerID) {
-    String message = HANDSHAKE_PREFIX + peerID;
+    HandshakeMessage msg = new HandshakeMessage(peerID);
     try {
-      out.writeObject(message);
+      out.writeObject(msg);
       out.flush();
     } catch (Exception e) {
       DebugLogger.instance.err(e.getMessage());

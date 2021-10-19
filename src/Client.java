@@ -33,7 +33,7 @@ public class Client implements Runnable {
 
       // Perform handshake
       msgHandler.sendHandshake(out, hostInfo.peerID);
-      boolean checkHandshake = msgHandler.receiveHandshakeClient(in, hostInfo.peerID);
+      boolean checkHandshake = msgHandler.receiveHandshakeClient(in, targetInfo.peerID);
 
       if (checkHandshake) {
         DebugLogger.instance.log("Handshake valid");

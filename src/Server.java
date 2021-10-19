@@ -42,6 +42,7 @@ public class Server implements Runnable {
 		private int no; // The index number of the client
 
 		private PeerInfo hostInfo;
+		private PeerInfo connectedInfo;
 
 		private MessageHandler msgHandler;
 
@@ -61,10 +62,11 @@ public class Server implements Runnable {
 
 				// Perform handshake
 				String peerID = msgHandler.receiveHandshakeServer(in);
-				if (peerID != null) {
+				this.connectedInfo = PeerInfoList.instance.getPeer(peerID);
+				if (this.connectedInfo != null) {
 					// Create an item in ConnectedClientsList
 					Logger.instance.logTCPConnectionFrom(peerID);
-					msgHandler.sendHandshake(out, peerID);
+					msgHandler.sendHandshake(out, hostInfo.peerID);
 					DebugLogger.instance.log("Handshake completed");
 
 					while (PeerInfoList.instance.checkAllPeersHaveFile() == false) {
