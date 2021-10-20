@@ -1,17 +1,24 @@
+package main.messaging;
+
 import java.net.*;
 import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
 
-public class MessageHandler {
-  private static final String HANDSHAKE_PREFIX = "P2PFILESHARINGPROJ0000000000";
+import main.logging.*;
+import main.messaging.payloads.Payload;
 
+public class MessageHandler {
   public String receiveHandshakeServer(ObjectInputStream in) {
     try {
-      String received = (String) in.readObject();
-      String peerID = received.substring(HANDSHAKE_PREFIX.length());
-      return peerID;
+      byte[] bytes = (byte[]) in.readObject();
+      HandshakeMessage received = new HandshakeMessage(bytes);
+      if (received.header.equals(HandshakeMessage.HEADER) && Arrays.equals(received.zeroes, HandshakeMessage.ZEROES)) {
+        return Integer.toString(received.peerID);
+      } else {
+        return null;
+      }
     } catch (IOException e) {
       DebugLogger.instance.err(e.getMessage());
       e.printStackTrace();
@@ -23,8 +30,10 @@ public class MessageHandler {
 
   public boolean receiveHandshakeClient(ObjectInputStream in, String peerID) {
     try {
-      String received = (String) in.readObject();
-      if (received.equals(HANDSHAKE_PREFIX + peerID)) {
+      byte[] bytes = (byte[]) in.readObject();
+      HandshakeMessage received = new HandshakeMessage(bytes);
+      if (received.header.equals(HandshakeMessage.HEADER) && Arrays.equals(received.zeroes, HandshakeMessage.ZEROES)
+          && received.peerID == Integer.parseInt(peerID)) {
         return true;
       } else {
         return false;
@@ -39,19 +48,19 @@ public class MessageHandler {
   }
 
   public void sendHandshake(ObjectOutputStream out, String peerID) {
-    String message = HANDSHAKE_PREFIX + peerID;
+    HandshakeMessage msg = new HandshakeMessage(peerID);
     try {
-      out.writeObject(message);
+      out.writeObject(msg.getBytes());
       out.flush();
     } catch (Exception e) {
       DebugLogger.instance.err(e.getMessage());
     }
   }
 
-  public void sendMessage(ObjectOutputStream out, Message msg) {
-    String message = "test message";
+  public void sendMessage(ObjectOutputStream out, MessageType type, Payload payload) {
+    Message msg = new Message(payload.getLength(), type, payload);
     try {
-      out.writeObject(message);
+      out.writeObject(msg.getBytes());
       out.flush();
     } catch (Exception e) {
       DebugLogger.instance.err(e.getMessage());
@@ -60,8 +69,8 @@ public class MessageHandler {
 
   public Message receiveMessage(ObjectInputStream in) {
     try {
-      String received = (String) in.readObject();
-      return new Message(MessageType.INTERESTED, null);
+      byte[] bytes = (byte[]) in.readObject();
+      return new Message(bytes);
     } catch (IOException e) {
       DebugLogger.instance.err(e.getMessage());
       e.printStackTrace();

@@ -1,8 +1,14 @@
+package main;
+
 import java.net.*;
 import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
+
+import main.logging.*;
+import main.messaging.*;
+import main.messaging.payloads.*;
 
 public class Server implements Runnable {
 
@@ -40,12 +46,17 @@ public class Server implements Runnable {
 		private ObjectInputStream in; // stream read from the socket
 		private ObjectOutputStream out; // stream write to the socket
 		private int no; // The index number of the client
+
 		private PeerInfo hostInfo;
+		private PeerInfo connectedInfo;
+
+		private MessageHandler msgHandler;
 
 		public Handler(Socket connection, int no, PeerInfo hostInfo) {
 			this.connection = connection;
 			this.no = no;
 			this.hostInfo = hostInfo;
+			this.msgHandler = new MessageHandler();
 		}
 
 		public void run() {
@@ -55,14 +66,13 @@ public class Server implements Runnable {
 				out.flush();
 				in = new ObjectInputStream(connection.getInputStream());
 
-				MessageHandler msgHandler = new MessageHandler();
-
 				// Perform handshake
 				String peerID = msgHandler.receiveHandshakeServer(in);
-				if (peerID != null) {
+				this.connectedInfo = PeerInfoList.instance.getPeer(peerID);
+				if (this.connectedInfo != null) {
 					// Create an item in ConnectedClientsList
-					Logger.instance.logTCPConnectionFrom(peerID);
-					msgHandler.sendHandshake(out, peerID);
+					FileLogger.instance.logTCPConnectionFrom(peerID);
+					msgHandler.sendHandshake(out, hostInfo.peerID);
 					DebugLogger.instance.log("Handshake completed");
 
 					while (PeerInfoList.instance.checkAllPeersHaveFile() == false) {
@@ -72,20 +82,21 @@ public class Server implements Runnable {
 
 						// Handle the received message
 						switch (received.type) {
-							case BITFIELD:
-								// TODO: store bitfield in list of peers
-
-								// TODO: add bitfield to payload
-								Message toSend = new Message(MessageType.BITFIELD, null);
-								msgHandler.sendMessage(out, toSend);
-							case INTERESTED:
-								// TODO
-							case NOT_INTERESTED:
-								// TODO
-							case REQUEST:
-								// TODO
-							default:
-								DebugLogger.instance.log("Default case");
+						case BITFIELD:
+							handleBitfieldReceived(received);
+							break;
+						case INTERESTED:
+							// TODO
+							break;
+						case NOT_INTERESTED:
+							// TODO
+							break;
+						case REQUEST:
+							handleRequestReceived(received);
+							break;
+						default:
+							DebugLogger.instance.log("Default case");
+							break;
 						}
 					}
 
@@ -107,6 +118,18 @@ public class Server implements Runnable {
 			}
 		}
 
+		private void handleBitfieldReceived(Message received) {
+			// TODO: store bitfield in list of peers
+
+			// TODO: add bitfield to payload
+			msgHandler.sendMessage(out, MessageType.BITFIELD, new EmptyPayload());
+		}
+
+		private void handleRequestReceived(Message received) {
+			RequestPayload payload = (RequestPayload) received.getPayload();
+			byte[] piece = PieceStorage.instance.getPiece(payload.index);
+			msgHandler.sendMessage(out, MessageType.PIECE, new PiecePayload(payload.index, piece));
+		}
 	}
 
 }

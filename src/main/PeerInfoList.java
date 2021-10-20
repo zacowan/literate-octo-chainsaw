@@ -1,3 +1,5 @@
+package main;
+
 import java.net.*;
 import java.io.*;
 import java.nio.*;
@@ -43,6 +45,17 @@ public class PeerInfoList {
 
   public synchronized PeerInfo getPeer(int i) {
     return peerInfoList.get(i);
+  }
+
+  public synchronized PeerInfo getPeer(String peerID) {
+    PeerInfo ret = null;
+    for (PeerInfo peer : peerInfoList) {
+      if (peer.peerID.equals(peerID)) {
+        ret = peer;
+        break;
+      }
+    }
+    return ret;
   }
 
   public synchronized void updatePeer(int i, PeerInfo peer) {

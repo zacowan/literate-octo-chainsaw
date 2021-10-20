@@ -1,8 +1,14 @@
+package main;
+
 import java.net.*;
 import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
+
+import main.logging.*;
+import main.messaging.*;
+import main.messaging.payloads.*;
 
 public class Client implements Runnable {
   Socket requestSocket; // socket connect to the server
@@ -12,9 +18,12 @@ public class Client implements Runnable {
   PeerInfo hostInfo;
   PeerInfo targetInfo;
 
+  MessageHandler msgHandler;
+
   public Client(PeerInfo hostInfo, PeerInfo targetInfo) {
     this.hostInfo = hostInfo;
     this.targetInfo = targetInfo;
+    this.msgHandler = new MessageHandler();
   }
 
   public void run() {
@@ -28,16 +37,13 @@ public class Client implements Runnable {
       out.flush();
       in = new ObjectInputStream(requestSocket.getInputStream());
 
-      // Initialize message handler
-      MessageHandler msgHandler = new MessageHandler();
-
       // Perform handshake
       msgHandler.sendHandshake(out, hostInfo.peerID);
-      boolean checkHandshake = msgHandler.receiveHandshakeClient(in, hostInfo.peerID);
+      boolean checkHandshake = msgHandler.receiveHandshakeClient(in, targetInfo.peerID);
 
       if (checkHandshake) {
         DebugLogger.instance.log("Handshake valid");
-        Logger.instance.logTCPConnectionTo(targetInfo.peerID);
+        FileLogger.instance.logTCPConnectionTo(targetInfo.peerID);
 
         // TODO: send bitfield message
 
@@ -48,24 +54,21 @@ public class Client implements Runnable {
 
           // Handle the received message
           switch (received.type) {
-            case BITFIELD:
-              // TODO: inspect bitfield, compare with what host needs
-              boolean interested = true;
-              if (interested) {
-                Message toSend = new Message(MessageType.INTERESTED, null);
-                msgHandler.sendMessage(out, toSend);
-              } else {
-                Message toSend = new Message(MessageType.NOT_INTERESTED, null);
-                msgHandler.sendMessage(out, toSend);
-              }
-            case CHOKE:
-              // TODO
-            case UNCHOKE:
-              // TODO
-            case PIECE:
-              // TODO
-            default:
-              DebugLogger.instance.log("Default case");
+          case BITFIELD:
+            handleBitfieldReceived(received);
+            break;
+          case CHOKE:
+            // TODO
+            break;
+          case UNCHOKE:
+            // TODO
+            break;
+          case PIECE:
+            handlePieceReceived(received);
+            break;
+          default:
+            DebugLogger.instance.log("Default case");
+            break;
           }
         }
       } else {
@@ -88,5 +91,29 @@ public class Client implements Runnable {
         ioException.printStackTrace();
       }
     }
+  }
+
+  private void handleBitfieldReceived(Message received) {
+    // TODO: inspect bitfield, compare with what host needs
+    boolean interested = true;
+    if (interested) {
+      msgHandler.sendMessage(out, MessageType.INTERESTED, new EmptyPayload());
+    } else {
+      msgHandler.sendMessage(out, MessageType.NOT_INTERESTED, new EmptyPayload());
+    }
+  }
+
+  private void handlePieceReceived(Message received) {
+    // Store piece in data structure
+    PiecePayload payload = (PiecePayload) received.getPayload();
+    PieceStorage.instance.setPiece(payload.index, payload.data);
+    // TODO: Update bitfield
+    // Send "have" message
+    // TODO: change null to bitfield
+    msgHandler.sendMessage(out, MessageType.HAVE, new EmptyPayload());
+    msgHandler.receiveMessage(in);
+    // Send "request" message?
+    // TODO: determine index based on inspecting bitfield
+    msgHandler.sendMessage(out, MessageType.REQUEST, new RequestPayload(0));
   }
 }
