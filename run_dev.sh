@@ -1,7 +1,7 @@
 #!/bin/bash
-javac -d _build_ src/*.java src/main/*.java src/main/logging/*.java src/main/messaging/*.java src/main/messaging/payloads/*.java
-cp test/*.cfg _build_
-cp test/thefile _build_
+javac -d _build_ @sources.txt
+
+cp -a test/ _build_
 
 cd _build_
 
