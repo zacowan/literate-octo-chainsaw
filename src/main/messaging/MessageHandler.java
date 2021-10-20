@@ -58,7 +58,7 @@ public class MessageHandler {
   }
 
   public void sendMessage(ObjectOutputStream out, MessageType type, Payload payload) {
-    Message msg = new Message(payload.getLength(), type, payload);
+    Message msg = new Message(type, payload);
     try {
       out.writeObject(msg.getBytes());
       out.flush();

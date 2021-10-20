@@ -13,6 +13,7 @@ public class PiecePayload extends Payload {
   public byte[] data;
 
   public PiecePayload(int index, byte[] data) {
+    this.index = index;
     this.data = data;
   }
 

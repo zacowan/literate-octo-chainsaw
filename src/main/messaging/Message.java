@@ -7,6 +7,7 @@ import java.nio.channels.*;
 import java.util.*;
 
 import main.logging.*;
+import main.messaging.payloads.EmptyPayload;
 import main.messaging.payloads.Payload;
 import main.messaging.payloads.PiecePayload;
 import main.messaging.payloads.RequestPayload;
@@ -20,14 +21,10 @@ public class Message {
   // this.length bytes
   private byte[] payload;
 
-  public Message(int length, MessageType type, Payload payload) {
-    this.length = length;
+  public Message(MessageType type, Payload payload) {
+    this.length = payload.getLength();
     this.type = type;
-    if (payload != null) {
-      this.payload = payload.getBytes();
-    } else {
-      this.payload = null;
-    }
+    this.payload = payload.getBytes();
   }
 
   public Message(byte[] bytes) {
@@ -91,7 +88,7 @@ public class Message {
     case PIECE:
       return new PiecePayload(payload);
     default:
-      return null;
+      return new EmptyPayload();
     }
   }
 

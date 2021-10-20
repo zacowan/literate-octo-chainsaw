@@ -14,7 +14,12 @@ public class peerProcess {
 
   public static void main(String args[]) {
     // args[0] = peerID
-    String peerID = args[0];
+    String peerID = null;
+    try {
+      peerID = args[0];
+    } catch (Exception e) {
+      DebugLogger.instance.err("No peerID passed to peerProcess, %s", e.getMessage());
+    }
 
     // Initialize debug logger
     DebugLogger.instance = new DebugLogger(peerID);
