@@ -18,6 +18,10 @@ Diagram: https://drive.google.com/file/d/170t8bSQvOByvuJmGKxeqEdJOYjQb3RMS/view?
 2. Give the script the proper permissions with `chmod +x run_dev.sh`.
 3. Run the script with `./run_dev.sh`.
 
+### Zipping for Midpoint Submission
+
+Run the command `tar cvf proj1.tar src README_MIDPOINT.md sources.txt`.
+
 ## Deadlines
 
 ### October 22
