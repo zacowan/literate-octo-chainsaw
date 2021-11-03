@@ -119,10 +119,13 @@ public class Server implements Runnable {
 		}
 
 		private void handleBitfieldReceived(Message received) {
-			// TODO: store bitfield in list of peers
-
-			// TODO: add bitfield to payload
-			msgHandler.sendMessage(out, MessageType.BITFIELD, new EmptyPayload());
+			// store bitfield in list of peers
+			BitfieldPayload payload = (BitfieldPayload) received.getPayload();
+			PeerInfoList.instance.updatePeerBitfield(PeerInfoList.instance.getPeerIndex(connectedInfo.peerID),
+					payload.bitfield);
+			// Send bitfield message
+			BitSet thisBitfield = PeerInfoList.instance.getPeer(hostInfo.peerID).bitfield;
+			msgHandler.sendMessage(out, MessageType.BITFIELD, new BitfieldPayload(thisBitfield));
 		}
 
 		private void handleRequestReceived(Message received) {

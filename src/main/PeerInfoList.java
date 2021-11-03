@@ -47,6 +47,18 @@ public class PeerInfoList {
     return peerInfoList.get(i);
   }
 
+  public synchronized int getPeerIndex(String peerID) {
+    int ret = -1;
+    for (int i = 0; i < peerInfoList.size(); i++) {
+      PeerInfo peer = peerInfoList.get(i);
+      if (peer.peerID.equals(peerID)) {
+        ret = i;
+        break;
+      }
+    }
+    return ret;
+  }
+
   public synchronized PeerInfo getPeer(String peerID) {
     PeerInfo ret = null;
     for (PeerInfo peer : peerInfoList) {
@@ -59,6 +71,12 @@ public class PeerInfoList {
   }
 
   public synchronized void updatePeer(int i, PeerInfo peer) {
+    peerInfoList.set(i, peer);
+  }
+
+  public synchronized void updatePeerBitfield(int i, BitSet bitfield) {
+    PeerInfo peer = peerInfoList.get(i);
+    peer.bitfield = bitfield;
     peerInfoList.set(i, peer);
   }
 

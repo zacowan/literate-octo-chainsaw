@@ -45,7 +45,8 @@ public class Client implements Runnable {
         DebugLogger.instance.log("Handshake valid");
         FileLogger.instance.logTCPConnectionTo(targetInfo.peerID);
 
-        // TODO: send bitfield message
+        // Send bitfield message
+        msgHandler.sendMessage(out, MessageType.BITFIELD, new BitfieldPayload(hostInfo.bitfield));
 
         while (PeerInfoList.instance.getThisPeer().hasFile == false) {
           // Wait for message
@@ -94,6 +95,9 @@ public class Client implements Runnable {
   }
 
   private void handleBitfieldReceived(Message received) {
+    // Store bitfield in list of peers
+    BitfieldPayload payload = (BitfieldPayload) received.getPayload();
+    PeerInfoList.instance.updatePeerBitfield(PeerInfoList.instance.getPeerIndex(targetInfo.peerID), payload.bitfield);
     // TODO: inspect bitfield, compare with what host needs
     boolean interested = true;
     if (interested) {

@@ -54,7 +54,7 @@ public class peerProcess {
       int index = 0;
       while (scanner.hasNextLine()) {
         String[] line = scanner.nextLine().split(" ");
-        PeerInfo currentPeer = new PeerInfo(line[0], line[1], line[2], line[3]);
+        PeerInfo currentPeer = new PeerInfo(cc, line[0], line[1], line[2], line[3]);
         PeerInfoList.instance.addPeer(currentPeer);
         if (currentPeer.peerID.equals(peerID)) {
           PeerInfoList.instance.setThisPeerIndex(index);
