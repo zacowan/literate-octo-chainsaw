@@ -23,7 +23,7 @@
 
 ### Actual Message
 
-- Variable size (max of 2^32 + 4 + 1? bytes)
+- Variable size (max of 2^32 + 4 + 1 bytes)
   - 4-byte for specifying message length, in bytes
   - 1-byte for specifying message type (see [message types](#message-types))
   - X-byte message payload

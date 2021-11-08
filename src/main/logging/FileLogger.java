@@ -1,4 +1,4 @@
-package p2p;
+package main.logging;
 
 import java.net.*;
 import java.io.*;
@@ -6,7 +6,7 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
 
-public class Logger {
+public class FileLogger {
   // Created in peerProcess
   // Singleton?
   // Thread-safe (synchronized)
@@ -15,40 +15,46 @@ public class Logger {
   // Method for opening/closing file
   // Ask about constantly writing to file, or writing to file at end
 
-  public static Logger instance = null;
+  public static FileLogger instance = null;
 
   private String hostID;
   private String filename;
   private FileWriter writer;
 
-  public Logger(String hostID) {
+  public FileLogger(String hostID) {
     this.hostID = hostID;
     this.filename = "peer_log_" + hostID + ".log";
-    createLogFile(filename);
+    createLogFile();
   }
 
-  public void closeLogFile() {
+  private void closeWriter() {
     try {
       writer.close();
     } catch (IOException e) {
-      System.err.printf("Error closing log file, %s\n", e.getMessage());
+      DebugLogger.instance.err(e.getMessage());
     }
   }
 
-  private void createLogFile(String path) {
+  private void createLogFile() {
+    new File(filename);
     try {
-      File file = new File(filename);
-      writer = new FileWriter(file.getName());
+      writer = new FileWriter(filename);
+      writer.write("");
     } catch (IOException e) {
-      System.err.printf("Error creating log file, %s\n", e.getMessage());
+      DebugLogger.instance.err(e.getMessage());
+    } finally {
+      closeWriter();
     }
   }
 
   private void writeLogToFile(String log) {
     try {
-      writer.write(log + ".");
+      writer = new FileWriter(filename);
+      writer.append(log + ".\n");
     } catch (IOException e) {
-      System.err.printf("Error writing to log file, %s\n", e.getMessage());
+      DebugLogger.instance.err(e.getMessage());
+    } finally {
+      closeWriter();
     }
   }
 
@@ -63,13 +69,13 @@ public class Logger {
 
   // Zach
   public synchronized void logTCPConnectionTo(String peerID) {
-    String log = getTimestamp() + getPeerString(hostID) + " makes a connection to" + getPeerString(peerID);
+    String log = getTimestamp() + getPeerString(hostID) + " makes a connection to " + getPeerString(peerID);
     writeLogToFile(log);
   }
 
   // Zach
   public synchronized void logTCPConnectionFrom(String peerID) {
-    String log = getTimestamp() + getPeerString(hostID) + " is connected from" + getPeerString(peerID);
+    String log = getTimestamp() + getPeerString(hostID) + " is connected from " + getPeerString(peerID);
     writeLogToFile(log);
   }
 
