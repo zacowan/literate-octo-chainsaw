@@ -20,11 +20,20 @@ public class Message {
   public MessageType type;
   // this.length bytes
   private byte[] payload;
+  private BitSet bitfield;
 
   public Message(MessageType type, Payload payload) {
     this.length = payload.getLength();
     this.type = type;
     this.payload = payload.getBytes();
+  }
+
+  public Message(MessageType type, Payload payload, BitSet bitfield)
+  {
+    this.length = payload.getLength();
+    this.type = type;
+    this.payload = payload.getBytes();
+    this.bitfield = bitfield;
   }
 
   public Message(byte[] bytes) {

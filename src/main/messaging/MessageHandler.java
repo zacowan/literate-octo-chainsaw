@@ -67,6 +67,17 @@ public class MessageHandler {
     }
   }
 
+  public void sendUnchokeMessage(ObjectOutputStream out, MessageType type, Payload payload, BitSet bitfield)
+  {
+    Message msg = new Message(type, payload, bitfield);
+    try {
+      out.writeObject(msg.getBytes());
+      out.flush();
+    } catch (Exception e) {
+      DebugLogger.instance.err(e.getMessage());
+    }
+  }
+
   public Message receiveMessage(ObjectInputStream in) {
     try {
       byte[] bytes = (byte[]) in.readObject();

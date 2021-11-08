@@ -17,6 +17,7 @@ public class Client implements Runnable {
 
   PeerInfo hostInfo;
   PeerInfo targetInfo;
+  private HashMap<Integer, PeerInfo> peerMap;
 
   MessageHandler msgHandler;
 
@@ -59,10 +60,10 @@ public class Client implements Runnable {
             handleBitfieldReceived(received);
             break;
           case CHOKE:
-            // TODO
+            handleChokeReceived(received);
             break;
           case UNCHOKE:
-            // TODO
+            handleUnchokeReceived(received);
             break;
           case PIECE:
             handlePieceReceived(received);
@@ -120,4 +121,34 @@ public class Client implements Runnable {
     // TODO: determine index based on inspecting bitfield
     msgHandler.sendMessage(out, MessageType.REQUEST, new RequestPayload(0));
   }
+}
+
+//need to know which peer sent the message
+
+private void handleChokeReceived(Message received)
+{
+ //Maybe choke back?
+}
+
+private void handleUnchokeReceived(Message received)
+{
+  //Compare bitfield of send to ours to see what data to request
+  //send a request payload back with the chosen index
+
+
+
+  if (pieceIndex != -1)
+  {
+    msgHandler.sendMessage(out, MessageType.REQUEST, new RequestPayload(pieceIndex));
+  }
+}
+
+private void unChokingUpdate()
+{
+  //randomly select peers that are 'interested' to choke
+}
+
+private void optimisticallyUnchokedUpdate()
+{
+  //randomly unchoke a neighbor
 }
