@@ -7,6 +7,7 @@ import java.nio.channels.*;
 import java.util.*;
 
 import main.logging.*;
+import main.messaging.payloads.BitfieldPayload;
 import main.messaging.payloads.EmptyPayload;
 import main.messaging.payloads.Payload;
 import main.messaging.payloads.PiecePayload;
@@ -87,6 +88,8 @@ public class Message {
       return new RequestPayload(payload);
     case PIECE:
       return new PiecePayload(payload);
+    case BITFIELD:
+      return new BitfieldPayload(payload);
     default:
       return new EmptyPayload();
     }
