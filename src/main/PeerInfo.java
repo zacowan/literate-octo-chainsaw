@@ -6,17 +6,15 @@ public class PeerInfo {
   public String peerID;
   public String hostname;
   public String port;
-  // boolean should be a bitfield
-  // Java BitSet ??
-  // HOw many total pieces
-  // How many pieces we have
   public BitSet bitfield;
+  public int listIndex;
   public boolean hasFile;
 
-  public PeerInfo(CommonConfig config, String peerID, String hostname, String port, String hasFile) {
+  public PeerInfo(CommonConfig config, String peerID, String hostname, String port, String hasFile, int listIndex) {
     this.peerID = peerID;
     this.hostname = hostname;
     this.port = port;
+    this.listIndex = listIndex;
     // All pieces should be here if the peer starts with a file
     int hasFileInt = Integer.parseInt(hasFile);
     this.hasFile = hasFileInt == 1 ? true : false; // hasfineInt?
@@ -28,10 +26,5 @@ public class PeerInfo {
         bitfield.set(i, true);
       }
     }
-  }
-
-  // TODO: implement compare method
-  void compare(PeerInfo peer) {
-
   }
 }
