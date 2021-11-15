@@ -45,7 +45,9 @@ public class Client implements Runnable {
         DebugLogger.instance.log("Handshake valid");
         FileLogger.instance.logTCPConnectionTo(targetInfo.peerID);
 
-        // TODO: send bitfield message
+        // Send bitfield message
+        BitSet thisBitfield = PeerInfoList.instance.getPeer(hostInfo.peerID).bitfield;
+        msgHandler.sendMessage(out, MessageType.BITFIELD, new BitfieldPayload(thisBitfield));
 
         while (PeerInfoList.instance.getThisPeer().hasFile == false) {
           // Wait for message
@@ -94,8 +96,12 @@ public class Client implements Runnable {
   }
 
   private void handleBitfieldReceived(Message received) {
-    // TODO: inspect bitfield, compare with what host needs
-    boolean interested = true;
+    // Store bitfield in list of peers
+    BitfieldPayload payload = (BitfieldPayload) received.getPayload();
+    PeerInfoList.instance.updatePeerBitfield(targetInfo.listIndex, payload.bitfield);
+
+    // Compare bitfields to check if interested or not
+    boolean interested = payload.compare(PeerInfoList.instance.getPeer(hostInfo.peerID).bitfield);
     if (interested) {
       msgHandler.sendMessage(out, MessageType.INTERESTED, new EmptyPayload());
     } else {
@@ -107,13 +113,15 @@ public class Client implements Runnable {
     // Store piece in data structure
     PiecePayload payload = (PiecePayload) received.getPayload();
     PieceStorage.instance.setPiece(payload.index, payload.data);
-    // TODO: Update bitfield
+    // Update bitfield
+    PeerInfoList.instance.getPeer(hostInfo.peerID).bitfield.set(payload.index, true);
     // Send "have" message
-    // TODO: change null to bitfield
+    // TODO: change EmptyPayload to HavePayload with 4-byte piece index
     msgHandler.sendMessage(out, MessageType.HAVE, new EmptyPayload());
     msgHandler.receiveMessage(in);
     // Send "request" message?
     // TODO: determine index based on inspecting bitfield
+    // TODO: exit thread if all pieces from target peer have been received
     msgHandler.sendMessage(out, MessageType.REQUEST, new RequestPayload(0));
   }
 }

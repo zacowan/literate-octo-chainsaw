@@ -7,6 +7,7 @@ import java.nio.channels.*;
 import java.util.*;
 
 import main.logging.*;
+import main.messaging.payloads.BitfieldPayload;
 import main.messaging.payloads.EmptyPayload;
 import main.messaging.payloads.Payload;
 import main.messaging.payloads.PiecePayload;
@@ -38,7 +39,7 @@ public class Message {
     if (this.length > 5) {
       this.payload = Arrays.copyOfRange(bytes, 5, this.length);
     } else {
-      this.payload = null;
+      this.payload = new byte[0];
     }
 
     // Set message type
@@ -87,6 +88,8 @@ public class Message {
       return new RequestPayload(payload);
     case PIECE:
       return new PiecePayload(payload);
+    case BITFIELD:
+      return new BitfieldPayload(payload);
     default:
       return new EmptyPayload();
     }

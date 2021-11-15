@@ -21,13 +21,21 @@ public class DebugLogger {
   }
 
   public void log(String msg, Object... args) {
-    String formatted = String.format(msg, args);
-    System.out.printf("[Peer %s:%s] %s\n", peerID, getClassMethodName(), formatted);
+    if (args != null) {
+      String formatted = String.format(msg, args);
+      System.out.printf("[Peer %s:%s] %s\n", peerID, getClassMethodName(), formatted);
+    } else {
+      System.out.printf("[Peer %s:%s] %s\n", peerID, getClassMethodName(), msg);
+    }
   }
 
   public void err(String msg, Object... args) {
-    String formatted = String.format(msg, args);
-    System.err.printf("[Peer %s:%s] %s\n", peerID, getClassMethodName(), formatted);
+    if (args != null) {
+      String formatted = String.format(msg, args);
+      System.err.printf("[Peer %s:%s] %s\n", peerID, getClassMethodName(), formatted);
+    } else {
+      System.err.printf("[Peer %s:%s] %s\n", peerID, getClassMethodName(), msg);
+    }
     System.exit(-1);
   }
 }
