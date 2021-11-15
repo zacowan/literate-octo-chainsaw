@@ -133,6 +133,16 @@ public class Server implements Runnable {
 			byte[] piece = PieceStorage.instance.getPiece(payload.index);
 			msgHandler.sendMessage(out, MessageType.PIECE, new PiecePayload(payload.index, piece));
 		}
+
+		private void unChokingUpdate()
+		{
+  			//randomly select peers that are 'interested' to choke
+		}
+
+		private void optimisticallyUnchokedUpdate()
+		{
+			//randomly unchoke a neighbor
+		}
 	}
 
 }

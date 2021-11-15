@@ -142,13 +142,4 @@ private void handleUnchokeReceived(Message received)
     msgHandler.sendMessage(out, MessageType.REQUEST, new RequestPayload(pieceIndex));
   }
 }
-
-private void unChokingUpdate()
-{
-  //randomly select peers that are 'interested' to choke
-}
-
-private void optimisticallyUnchokedUpdate()
-{
-  //randomly unchoke a neighbor
 }
