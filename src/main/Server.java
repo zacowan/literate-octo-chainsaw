@@ -15,7 +15,7 @@ public class Server implements Runnable {
 	/**
 	 * The list of peerIDs that are interested in this peer's pieces.
 	 */
-	private static List<String> interested;
+	private static List<String> interested = new ArrayList<>();
 
 	/**
 	 *

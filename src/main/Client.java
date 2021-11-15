@@ -46,7 +46,8 @@ public class Client implements Runnable {
         FileLogger.instance.logTCPConnectionTo(targetInfo.peerID);
 
         // Send bitfield message
-        msgHandler.sendMessage(out, MessageType.BITFIELD, new BitfieldPayload(hostInfo.bitfield));
+        BitSet thisBitfield = PeerInfoList.instance.getPeer(hostInfo.peerID).bitfield;
+        msgHandler.sendMessage(out, MessageType.BITFIELD, new BitfieldPayload(thisBitfield));
 
         while (PeerInfoList.instance.getThisPeer().hasFile == false) {
           // Wait for message

@@ -39,7 +39,7 @@ public class Message {
     if (this.length > 5) {
       this.payload = Arrays.copyOfRange(bytes, 5, this.length);
     } else {
-      this.payload = null;
+      this.payload = new byte[0];
     }
 
     // Set message type

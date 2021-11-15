@@ -25,6 +25,10 @@ public class PeerInfo {
       for (int i = 0; i < numPieces; i++) {
         bitfield.set(i, true);
       }
+    } else {
+      for (int i = 0; i < numPieces; i++) {
+        bitfield.set(i, false);
+      }
     }
   }
 }
