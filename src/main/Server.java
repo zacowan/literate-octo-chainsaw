@@ -12,6 +12,35 @@ import main.messaging.payloads.*;
 
 public class Server implements Runnable {
 
+	/**
+	 * The list of peerIDs that are interested in this peer's pieces.
+	 */
+	private static List<String> interested = new ArrayList<>();
+
+	/**
+	 *
+	 * @return a list of peerIDs that are interested.
+	 */
+	public static synchronized List<String> getInterested() {
+		return interested;
+	}
+
+	/**
+	 *
+	 * @param peerID the peerID to add to the list of interested peers.
+	 */
+	public static synchronized void addInterested(String peerID) {
+		interested.add(peerID);
+	}
+
+	/**
+	 *
+	 * @param peerID the peerID to remove from the list of interested peers.
+	 */
+	public static synchronized void removeInterested(String peerID) {
+		interested.removeIf(p -> p.equals(peerID));
+	}
+
 	private PeerInfo hostInfo;
 
 	public Server(PeerInfo hostInfo) {
@@ -86,10 +115,10 @@ public class Server implements Runnable {
 							handleBitfieldReceived(received);
 							break;
 						case INTERESTED:
-							// TODO
+							handleInterestedReceived(received);
 							break;
 						case NOT_INTERESTED:
-							// TODO
+							handleNotInterestedReceived(received);
 							break;
 						case REQUEST:
 							handleRequestReceived(received);
@@ -116,6 +145,17 @@ public class Server implements Runnable {
 					DebugLogger.instance.err("Client %d disconnected", no);
 				}
 			}
+		}
+
+		private void handleInterestedReceived(Message received) {
+			// Add the peer to the list of interested peers
+			Server.addInterested(connectedInfo.peerID);
+			// TODO: do we send a message here?
+		}
+
+		private void handleNotInterestedReceived(Message received) {
+			// Remove the peer from the list of interested peers
+			Server.removeInterested(connectedInfo.peerID);
 		}
 
 		private void handleBitfieldReceived(Message received) {
