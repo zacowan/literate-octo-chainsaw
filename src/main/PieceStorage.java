@@ -21,9 +21,9 @@ public class PieceStorage {
     downloaded.put(index, data);
   }
 
-  public PieceStorage(CommonConfig config, boolean hasFile) {
-    int numPieces = (int) Math.ceil(Double.parseDouble(config.fileSize) / Double.parseDouble(config.pieceSize));
-    int pieceSize = Integer.parseInt(config.pieceSize);
+  public PieceStorage(boolean hasFile) {
+    int numPieces = (int) Math.ceil(Double.parseDouble(CommonConfig.fileSize) / Double.parseDouble(CommonConfig.pieceSize));
+    int pieceSize = Integer.parseInt(CommonConfig.pieceSize);
 
     if (!hasFile) {
       this.downloaded = new HashMap<Integer, byte[]>(numPieces);
@@ -32,7 +32,7 @@ public class PieceStorage {
       this.downloaded = new HashMap<Integer, byte[]>(numPieces);
       // Open file and update downloaded with file data
       try {
-        InputStream in = new FileInputStream(config.fileName);
+        InputStream in = new FileInputStream(CommonConfig.fileName);
         // 1 char = 2 bytes
         // Read pieceSize / 2 characters, pieceNum times
         for (int i = 0; i < numPieces; i++) {

@@ -23,6 +23,10 @@ public class PeerInfoList {
     return true;
   }
 
+  public int getNumPeersAfterThisPeer() {
+    return peerInfoList.size() - thisPeerIndex - 1;
+  }
+
   public void setThisPeerIndex(int i) {
     thisPeerIndex = i;
   }

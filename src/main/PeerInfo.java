@@ -10,7 +10,7 @@ public class PeerInfo {
   public int listIndex;
   public boolean hasFile;
 
-  public PeerInfo(CommonConfig config, String peerID, String hostname, String port, String hasFile, int listIndex) {
+  public PeerInfo(String peerID, String hostname, String port, String hasFile, int listIndex) {
     this.peerID = peerID;
     this.hostname = hostname;
     this.port = port;
@@ -19,7 +19,7 @@ public class PeerInfo {
     int hasFileInt = Integer.parseInt(hasFile);
     this.hasFile = hasFileInt == 1 ? true : false; // hasfineInt?
     // Initialize bitfield
-    int numPieces = (int) Math.ceil(Double.parseDouble(config.fileSize) / Double.parseDouble(config.pieceSize));
+    int numPieces = (int) Math.ceil(Double.parseDouble(CommonConfig.fileSize) / Double.parseDouble(CommonConfig.pieceSize));
     this.bitfield = new BitSet(numPieces);
     if (this.hasFile) {
       for (int i = 0; i < numPieces; i++) {

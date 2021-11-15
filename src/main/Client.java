@@ -125,25 +125,55 @@ public class Client implements Runnable {
     // TODO: exit thread if all pieces from target peer have been received
     msgHandler.sendMessage(out, MessageType.REQUEST, new RequestPayload(0));
   }
-}
 
-//need to know which peer sent the message
+  //need to know which peer sent the message
 
-private void handleChokeReceived(Message received)
-{
- //Maybe choke back?
-}
-
-private void handleUnchokeReceived(Message received)
-{
-  //Compare bitfield of send to ours to see what data to request
-  //send a request payload back with the chosen index
-
-
-
-  if (pieceIndex != -1)
+  private void handleChokeReceived(Message received)
   {
-    msgHandler.sendMessage(out, MessageType.REQUEST, new RequestPayload(pieceIndex));
+    // Compare bitfields to determine if we are interested
+    // Send interested/not interested message
+
+    BitSet targetBitfield = PeerInfoList.instance.getPeer(targetInfo.peerID).bitfield;
+    BitSet thisBitfield = PeerInfoList.instance.getPeer(hostInfo.peerID).bitfield;
+    
+    for (int i = 0; i < targetBitfield.size(); i++)
+    {
+      if (targetBitfield.get(i) == true && thisBitfield.get(i) == false)
+      {
+        msgHandler.sendMessage(out, MessageType.INTERESTED, new EmptyPayload());
+        return;
+      }
+    }
+    
+    msgHandler.sendMessage(out, MessageType.NOT_INTERESTED, new EmptyPayload());
   }
-}
+
+  private void handleUnchokeReceived(Message received)
+  {
+    // Compare stored bitfield of to ours to see what data to request
+    BitSet targetBitfield = PeerInfoList.instance.getPeer(targetInfo.peerID).bitfield;
+    BitSet thisBitfield = PeerInfoList.instance.getPeer(hostInfo.peerID).bitfield;
+    // Find needed indices
+    List<Integer> interestedIndices = new ArrayList<>();
+    for (int i = 0; i < targetBitfield.size(); i++) {
+      boolean targetHas = targetBitfield.get(i);
+      boolean thisHas = thisBitfield.get(i);
+      if (targetHas && !thisHas) {
+        interestedIndices.add(i);
+      }
+    }
+    //unchoked but they have nothing we want
+    if(interestedIndices.size() == 0)
+    {
+      //send not interested
+      msgHandler.sendMessage(out, MessageType.NOT_INTERESTED, new EmptyPayload());
+    }
+    //unchoked and they have things we don't 
+    else
+    {
+      // Send request message with random index
+      int randIndex = interestedIndices.get(new Random().nextInt(interestedIndices.size()));
+      msgHandler.sendMessage(out, MessageType.REQUEST, new RequestPayload(randIndex));
+    }
+  }
 }

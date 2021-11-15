@@ -27,19 +27,16 @@ public class peerProcess {
     // Initialize logging to file
     FileLogger.instance = new FileLogger(peerID);
 
-    // Initialize common config class
-    CommonConfig cc = new CommonConfig();
-
     // read Common.cfg
     File commonFile = new File(CC_FILENAME);
     try {
       Scanner scanner = new Scanner(commonFile);
-      cc.numberOfPreferredNeighbors = scanner.nextLine().split(" ")[1];
-      cc.unchokingInterval = scanner.nextLine().split(" ")[1];
-      cc.optimisticUnchokingInterval = scanner.nextLine().split(" ")[1];
-      cc.fileName = scanner.nextLine().split(" ")[1];
-      cc.fileSize = scanner.nextLine().split(" ")[1];
-      cc.pieceSize = scanner.nextLine().split(" ")[1];
+      CommonConfig.numberOfPreferredNeighbors = scanner.nextLine().split(" ")[1];
+      CommonConfig.unchokingInterval = scanner.nextLine().split(" ")[1];
+      CommonConfig.optimisticUnchokingInterval = scanner.nextLine().split(" ")[1];
+      CommonConfig.fileName = scanner.nextLine().split(" ")[1];
+      CommonConfig.fileSize = scanner.nextLine().split(" ")[1];
+      CommonConfig.pieceSize = scanner.nextLine().split(" ")[1];
       scanner.close();
     } catch (Exception e) {
       DebugLogger.instance.err("Error parsing %s file, %s", CC_FILENAME, e.getMessage());
@@ -54,7 +51,7 @@ public class peerProcess {
       int index = 0;
       while (scanner.hasNextLine()) {
         String[] line = scanner.nextLine().split(" ");
-        PeerInfo currentPeer = new PeerInfo(cc, line[0], line[1], line[2], line[3], index);
+        PeerInfo currentPeer = new PeerInfo(line[0], line[1], line[2], line[3], index);
         PeerInfoList.instance.addPeer(currentPeer);
         if (currentPeer.peerID.equals(peerID)) {
           PeerInfoList.instance.setThisPeerIndex(index);
@@ -96,7 +93,7 @@ public class peerProcess {
     }
 
     // Initialize piece storage
-    PieceStorage.instance = new PieceStorage(cc, PeerInfoList.instance.getThisPeer().hasFile);
+    PieceStorage.instance = new PieceStorage(PeerInfoList.instance.getThisPeer().hasFile);
 
     // ConnectedClientsList
     // while (clients are connected)
