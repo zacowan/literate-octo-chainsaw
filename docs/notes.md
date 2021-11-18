@@ -92,7 +92,7 @@
   - Choked neighbors = all others
 - Determine preferred neighbors every `p` seconds
   > NOTE: if A has complete file, preferred neighbors are chosen _randomly_ instead of the process described below
-  - Among interested neighbors, A picks `k` neighbors that have fed A's data at the highest rate
+  - Among interested neighbors, A picks `k` neighbors that have fed data to A at the highest rate
     - More than 2 neighbors = random decision
   - A sends `unchoke` messages to newly preferred neighbors, expects a `request` message
     - Does not send `unchoke` message if neighbor is already unchoked

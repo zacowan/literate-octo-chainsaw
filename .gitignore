@@ -28,3 +28,6 @@ _build_/
 
 src/Common.cfg
 src/PeerInfo.cfg
+
+.idea
+*.iml
