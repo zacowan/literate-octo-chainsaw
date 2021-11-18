@@ -46,10 +46,10 @@ public class Server implements Runnable {
 	 * Mapping of peerID -> ObjectOutputStream.
 	 */
 	private static HashMap<String, ObjectOutputStream> outputStreams = new HashMap<>();
-	
+
 	/**
 	 * @param peerID the peerID associated with the output stream.
-	 * @param out the output stream associated with the target peer.
+	 * @param out    the output stream associated with the target peer.
 	 */
 	public static synchronized void insertOutputStream(String peerID, ObjectOutputStream out) {
 		outputStreams.put(peerID, out);
@@ -96,31 +96,31 @@ public class Server implements Runnable {
 		private List<String> curr = new ArrayList<>();
 
 		public void run() {
-			//need to initially populate... randomly 
-					
+			// need to initially populate... randomly
+
 			long time = Long.parseLong(CommonConfig.unchokingInterval);
 			int k = Integer.parseInt(CommonConfig.numberOfPreferredNeighbors);
 			TimeUnit.SECONDS.sleep(time);
-			//add peers from interested list
+			// add peers from interested list
 
 			while (true) {
 				List<String> currInterested = new ArrayList<>(interested);
-				for(int i = 0; i < k; i++ )
-				{
+				for (int i = 0; i < k; i++) {
 					// Get the random index
 					// Do a pop() = remove + return the removed item
 					// Add that to the new list
 					curr.add(interested.get(new Random().nextInt(interested.size())));
 				}
 				// Every n seconds, Pick k neighbors at random
-				
+
 				// Send unchoke to each of these neighbors
-		
-				// Send choke to the neighbors that were previously unchoked but not chosen again
-				
+
+				// Send choke to the neighbors that were previously unchoked but not chosen
+				// again
+
 				// Wait the interval
 				TimeUnit.SECONDS.sleep(time);
-			}		
+			}
 		}
 	}
 
@@ -129,29 +129,30 @@ public class Server implements Runnable {
 		private String prev = null;
 
 		public void run() {
-			MessageHandler msgHandler = new MessageHandler();			
+			MessageHandler msgHandler = new MessageHandler();
 			long time = Long.parseLong(CommonConfig.optimisticUnchokingInterval);
 
 			// Wait the interval
 			TimeUnit.SECONDS.sleep(time);
-			
+
 			while (true) {
-				// Every m seconds, pick 1 interested neighbor among choked at random that should be optimistically unchoked
+				// Every m seconds, pick 1 interested neighbor among choked at random that
+				// should be optimistically unchoked
 				int randIndex = new Random().nextInt(Server.getInterested().size());
 				String randomPeer = Server.getInterested().get(randIndex);
-		
+
 				// Send unchoke to that neighbor
-				msgHandler.sendMessage(Server.getOutputStreams().get(randomPeer), MessageType.UNCHOKE, new EmptyPayload());
+				msgHandler.sendMessage(Server.getOutputStreams().get(randomPeer), MessageType.UNCHOKE,
+						new EmptyPayload());
 				// Send choke to previous optimistically unchoked neighbor
-				if(prev != null)
-				{
+				if (prev != null) {
 					msgHandler.sendMessage(Server.getOutputStreams().get(prev), MessageType.CHOKE, new EmptyPayload());
 				}
 				prev = randomPeer;
 				// Wait the interval
 				TimeUnit.SECONDS.sleep(time);
 			}
-			
+
 		}
 	}
 

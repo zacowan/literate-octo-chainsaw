@@ -7,35 +7,35 @@ import java.nio.channels.*;
 import java.util.*;
 
 public class DebugLogger {
-  public static DebugLogger instance = null;
+    public static DebugLogger instance = null;
 
-  String peerID;
+    String peerID;
 
-  public DebugLogger(String peerID) {
-    this.peerID = peerID;
-  }
-
-  private String getClassMethodName() {
-    StackTraceElement el = Thread.currentThread().getStackTrace()[3];
-    return String.format("%s.%s", el.getClassName(), el.getMethodName());
-  }
-
-  public void log(String msg, Object... args) {
-    if (args != null) {
-      String formatted = String.format(msg, args);
-      System.out.printf("[Peer %s:%s] %s\n", peerID, getClassMethodName(), formatted);
-    } else {
-      System.out.printf("[Peer %s:%s] %s\n", peerID, getClassMethodName(), msg);
+    public DebugLogger(String peerID) {
+        this.peerID = peerID;
     }
-  }
 
-  public void err(String msg, Object... args) {
-    if (args != null) {
-      String formatted = String.format(msg, args);
-      System.err.printf("[Peer %s:%s] %s\n", peerID, getClassMethodName(), formatted);
-    } else {
-      System.err.printf("[Peer %s:%s] %s\n", peerID, getClassMethodName(), msg);
+    private String getClassMethodName() {
+        StackTraceElement el = Thread.currentThread().getStackTrace()[3];
+        return String.format("%s.%s", el.getClassName(), el.getMethodName());
     }
-    System.exit(-1);
-  }
+
+    public void log(String msg, Object... args) {
+        if (args != null) {
+            String formatted = String.format(msg, args);
+            System.out.printf("[Peer %s:%s] %s\n", peerID, getClassMethodName(), formatted);
+        } else {
+            System.out.printf("[Peer %s:%s] %s\n", peerID, getClassMethodName(), msg);
+        }
+    }
+
+    public void err(String msg, Object... args) {
+        if (args != null) {
+            String formatted = String.format(msg, args);
+            System.err.printf("[Peer %s:%s] %s\n", peerID, getClassMethodName(), formatted);
+        } else {
+            System.err.printf("[Peer %s:%s] %s\n", peerID, getClassMethodName(), msg);
+        }
+        System.exit(-1);
+    }
 }
