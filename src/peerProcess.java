@@ -95,6 +95,9 @@ public class peerProcess {
         // Initialize piece storage
         PieceStorage.instance = new PieceStorage(PeerInfoList.instance.getThisPeer().hasFile);
 
+        // Initialize rate tracker
+        RateTracker.instance = new RateTracker(PeerInfoList.instance.getList());
+
         // ConnectedClientsList
         // while (clients are connected)
         // set some timer

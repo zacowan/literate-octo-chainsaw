@@ -114,6 +114,8 @@ public class Client implements Runnable {
         // Store piece in data structure
         PiecePayload payload = (PiecePayload) received.getPayload();
         PieceStorage.instance.setPiece(payload.index, payload.data);
+        // Update upload rate
+        RateTracker.instance.updateRate(targetInfo.peerID, payload.data.length);
         // Update bitfield
         PeerInfoList.instance.getPeer(hostInfo.peerID).bitfield.set(payload.index, true);
         // Send "have" message

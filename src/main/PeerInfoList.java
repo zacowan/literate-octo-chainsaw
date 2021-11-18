@@ -23,6 +23,10 @@ public class PeerInfoList {
         return true;
     }
 
+    public synchronized List<PeerInfo> getList() {
+        return peerInfoList;
+    }
+
     public int getNumPeersAfterThisPeer() {
         return peerInfoList.size() - thisPeerIndex - 1;
     }
