@@ -351,7 +351,6 @@ public class Server implements Runnable {
 		private void handleInterestedReceived(Message received) {
 			// Add the peer to the list of interested peers
 			Server.addInterested(connectedInfo.peerID);
-			// TODO: do we send a message here?
 		}
 
 		private void handleNotInterestedReceived(Message received) {
