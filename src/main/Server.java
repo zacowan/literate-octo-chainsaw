@@ -134,6 +134,7 @@ public class Server implements Runnable {
 			}
 			currInterested.sort((p1, p2) -> rates.get(p1).compareTo(rates.get(p2)));
 			List<String> picked = new ArrayList<>();
+			// TODO: check out "More than 2 neighbors = random decision"
 			for (int i = 0; i < Math.min(k, currInterested.size()); i++) {
 				picked.add(currInterested.get(i));
 			}
@@ -212,7 +213,6 @@ public class Server implements Runnable {
 
 	// Handles optimistically unchoking an interested peer
 	private static class HandleOptimisticUnchoke implements Runnable {
-		// TODO: use the unchoked hashmap to ensure that we are choosing correctly
 		private String prev = null;
 
 		public void run() {
@@ -229,17 +229,30 @@ public class Server implements Runnable {
 			while (true) {
 				// Every m seconds, pick 1 interested neighbor among choked at random that
 				// should be optimistically unchoked
-				int randIndex = new Random().nextInt(Server.getInterested().size());
-				String randomPeer = Server.getInterested().get(randIndex);
+				// Get list of choked, yet interested neighbors
+				List<String> choked = new ArrayList<>();
+				for (String p : interested) {
+					if (!isUnchoked(p)) {
+						choked.add(p);
+					}
+				}
+				int randIndex = new Random().nextInt(choked.size());
+				String randomPeer = choked.get(randIndex);
 
 				// Send unchoke to that neighbor
 				msgHandler.sendMessage(Server.getOutputStreams().get(randomPeer), MessageType.UNCHOKE,
 						new EmptyPayload());
+
 				// Send choke to previous optimistically unchoked neighbor
 				if (prev != null) {
 					msgHandler.sendMessage(Server.getOutputStreams().get(prev), MessageType.CHOKE, new EmptyPayload());
 				}
+
+				// Update state variables
+				setUnchoked(prev, false);
 				prev = randomPeer;
+				setUnchoked(randomPeer, true);
+
 				// Wait the interval
 				try {
 					TimeUnit.SECONDS.sleep(time);
