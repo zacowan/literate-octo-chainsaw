@@ -5,6 +5,7 @@ import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import main.logging.*;
 import main.messaging.*;
@@ -12,57 +13,254 @@ import main.messaging.payloads.*;
 
 public class Server implements Runnable {
 
-	/**
-	 * The list of peerIDs that are interested in this peer's pieces.
-	 */
 	private static List<String> interested = new ArrayList<>();
 
-	/**
-	 *
-	 * @return a list of peerIDs that are interested.
-	 */
 	public static synchronized List<String> getInterested() {
 		return interested;
 	}
 
-	/**
-	 *
-	 * @param peerID the peerID to add to the list of interested peers.
-	 */
 	public static synchronized void addInterested(String peerID) {
 		interested.add(peerID);
 	}
 
-	/**
-	 *
-	 * @param peerID the peerID to remove from the list of interested peers.
-	 */
 	public static synchronized void removeInterested(String peerID) {
 		interested.removeIf(p -> p.equals(peerID));
 	}
 
+	/**
+	 * Mapping of peerID -> ObjectOutputStream.
+	 */
+	private static HashMap<String, ObjectOutputStream> outputStreams = new HashMap<>();
+
+	/**
+	 * @param peerID the peerID associated with the output stream.
+	 * @param out    the output stream associated with the target peer.
+	 */
+	public static synchronized void insertOutputStream(String peerID, ObjectOutputStream out) {
+		outputStreams.put(peerID, out);
+	}
+
+	/**
+	 * @return a hash map of peerID -> ObjectOutputStream.
+	 */
+	public static synchronized HashMap<String, ObjectOutputStream> getOutputStreams() {
+		return outputStreams;
+	}
+
+	private static HashMap<String, Boolean> unchoked = new HashMap<>();
+
+	public static synchronized boolean isUnchoked(String peerID) {
+		return unchoked.get(peerID);
+	}
+
+	public static synchronized void setUnchoked(String peerID, boolean val) {
+		unchoked.put(peerID, val);
+	}
+
 	private PeerInfo hostInfo;
+	private int numHandlers;
 
 	public Server(PeerInfo hostInfo) {
 		this.hostInfo = hostInfo;
+		this.numHandlers = PeerInfoList.instance.getNumPeersAfterThisPeer();
 	}
 
 	public void run() {
 		DebugLogger.instance.log("Server is running at %s:%s", hostInfo.hostname, hostInfo.port);
 		try {
 			ServerSocket listener = new ServerSocket(Integer.parseInt(hostInfo.port));
-			int clientNum = 1;
 			try {
-				while (true) {
-					new Handler(listener.accept(), clientNum, hostInfo).start();
-					DebugLogger.instance.log("Client %d is connected", clientNum);
-					clientNum++;
+				for (int i = 0; i < numHandlers; i++) {
+					new Handler(listener.accept(), i, hostInfo).start();
+					DebugLogger.instance.log("Client %d is connected", i);
 				}
 			} finally {
 				listener.close();
 			}
 		} catch (Exception e) {
 			System.err.println(e);
+		}
+		// Spawn the threads for choosing neighbors to send data to
+		new Thread(new HandlePreferredNeighbors()).run();
+		new Thread(new HandleOptimisticUnchoke()).run();
+	}
+
+	// Handles choosing preferred neighbors
+	private static class HandlePreferredNeighbors implements Runnable {
+		/**
+		 * Called if this peer has the full file.
+		 *
+		 * Chooses preferred neighbors completely randomly from list of interested
+		 * neighbors.
+		 *
+		 * @param k - the number of neighbors to choose.
+		 *
+		 * @return list of peer IDs that are preferred.
+		 */
+		private List<String> determinePreferredRandomly(int k) {
+			List<String> currInterested = new ArrayList<>(interested);
+			ArrayList<String> preferredNeighbors = new ArrayList<String>();
+
+			Random numberGenerator = new Random();
+
+			for (int i = 0; i < Math.min(k, currInterested.size()); i++) {
+				// Adding random index of currInterested into preferredNeighbors
+				int randNumber = numberGenerator.nextInt(currInterested.size());
+				preferredNeighbors.add(currInterested.get(randNumber));
+
+				// Removing from currInterested
+				currInterested.remove(randNumber);
+			}
+
+			return preferredNeighbors;
+		}
+
+		/**
+		 * Called if this peer doesn't have the full file.
+		 *
+		 * Choose preferred neighbors based on how many pieces they have sent to this
+		 * peer, in the most recent unchoking interval.
+		 *
+		 * @param k the number of neighbors to choose.
+		 *
+		 * @return list of peer IDs that are preferred.
+		 */
+		private List<String> determinePreferredNeighbors(int k) {
+			List<String> currInterested = new ArrayList<>(interested);
+			HashMap<String, Double> rates = new HashMap<>();
+			// Determine k neighbors that have fed data at the highest rate
+			for (String p : currInterested) {
+				rates.put(p, RateTracker.instance.getRate(p));
+			}
+			currInterested.sort((p1, p2) -> rates.get(p1).compareTo(rates.get(p2)));
+			List<String> picked = new ArrayList<>();
+			// TODO: check out "More than 2 neighbors = random decision"
+			for (int i = 0; i < Math.min(k, currInterested.size()); i++) {
+				picked.add(currInterested.get(i));
+			}
+			return picked;
+		}
+
+		public void run() {
+			MessageHandler msgHandler = new MessageHandler();
+			long time = Long.parseLong(CommonConfig.unchokingInterval);
+			int k = Integer.parseInt(CommonConfig.numberOfPreferredNeighbors);
+
+			// Wait the first interval
+			try {
+				TimeUnit.SECONDS.sleep(time);
+			} catch (InterruptedException e) {
+				System.out.print(e);
+			}
+
+			while (true) {
+
+				List<String> newPreferred = new ArrayList<>();
+
+				if (PeerInfoList.instance.getThisPeer().hasFile) {
+					// Determine toUnchoke randomly
+					newPreferred = determinePreferredRandomly(k);
+				} else {
+					// Determine toUnchoke mathematically
+					newPreferred = determinePreferredNeighbors(k);
+				}
+
+				// Determine which neighbors to send unchoke to
+				List<String> toUnchoke = new ArrayList<>();
+				for (String p : newPreferred) {
+					if (!isUnchoked(p)) {
+						toUnchoke.add(p);
+					}
+				}
+
+				// Determine which previously preferred neighbors to choke
+				// Remove preferred neighbors that are no longe preferred
+				List<String> toChoke = new ArrayList<>();
+				for (Map.Entry<String, Boolean> set : unchoked.entrySet()) {
+					if (set.getValue() && !newPreferred.contains(set.getKey())) {
+						toChoke.add(set.getKey());
+					}
+				}
+
+				// Send choke to toChoke
+				for (String p : toChoke) {
+					msgHandler.sendMessage(Server.getOutputStreams().get(p), MessageType.CHOKE, new EmptyPayload());
+				}
+
+				// Send unchoke message to every peer that needs to be unchoked
+				for (int i = 0; i < toUnchoke.size(); i++) {
+					msgHandler.sendMessage(Server.getOutputStreams().get(toUnchoke.get(i)), MessageType.UNCHOKE,
+							new EmptyPayload());
+				}
+
+				// Set the new currUnchoked
+				for (String p : toChoke) {
+					setUnchoked(p, false);
+				}
+				for (String p : toUnchoke) {
+					setUnchoked(p, true);
+				}
+
+				// Wait the interval
+				try {
+					TimeUnit.SECONDS.sleep(time);
+				} catch (InterruptedException e) {
+					System.out.print(e);
+				}
+			}
+		}
+	}
+
+	// Handles optimistically unchoking an interested peer
+	private static class HandleOptimisticUnchoke implements Runnable {
+		private String prev = null;
+
+		public void run() {
+			MessageHandler msgHandler = new MessageHandler();
+			long time = Long.parseLong(CommonConfig.optimisticUnchokingInterval);
+
+			// Wait the interval
+			try {
+				TimeUnit.SECONDS.sleep(time);
+			} catch (InterruptedException e) {
+				System.out.println(e);
+			}
+
+			while (true) {
+				// Every m seconds, pick 1 interested neighbor among choked at random that
+				// should be optimistically unchoked
+				// Get list of choked, yet interested neighbors
+				List<String> choked = new ArrayList<>();
+				for (String p : interested) {
+					if (!isUnchoked(p)) {
+						choked.add(p);
+					}
+				}
+				int randIndex = new Random().nextInt(choked.size());
+				String randomPeer = choked.get(randIndex);
+
+				// Send unchoke to that neighbor
+				msgHandler.sendMessage(Server.getOutputStreams().get(randomPeer), MessageType.UNCHOKE,
+						new EmptyPayload());
+
+				// Send choke to previous optimistically unchoked neighbor
+				if (prev != null) {
+					msgHandler.sendMessage(Server.getOutputStreams().get(prev), MessageType.CHOKE, new EmptyPayload());
+				}
+
+				// Update state variables
+				setUnchoked(prev, false);
+				prev = randomPeer;
+				setUnchoked(randomPeer, true);
+
+				// Wait the interval
+				try {
+					TimeUnit.SECONDS.sleep(time);
+				} catch (InterruptedException e) {
+					System.out.println(e);
+				}
+			}
+
 		}
 	}
 
@@ -103,6 +301,9 @@ public class Server implements Runnable {
 					FileLogger.instance.logTCPConnectionFrom(peerID);
 					msgHandler.sendHandshake(out, hostInfo.peerID);
 					DebugLogger.instance.log("Handshake completed");
+
+					// Store the output stream
+					Server.insertOutputStream(connectedInfo.peerID, out);
 
 					while (PeerInfoList.instance.checkAllPeersHaveFile() == false) {
 						// Wait for message
@@ -150,7 +351,6 @@ public class Server implements Runnable {
 		private void handleInterestedReceived(Message received) {
 			// Add the peer to the list of interested peers
 			Server.addInterested(connectedInfo.peerID);
-			// TODO: do we send a message here?
 		}
 
 		private void handleNotInterestedReceived(Message received) {
@@ -174,5 +374,4 @@ public class Server implements Runnable {
 			msgHandler.sendMessage(out, MessageType.PIECE, new PiecePayload(payload.index, piece));
 		}
 	}
-
 }

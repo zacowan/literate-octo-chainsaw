@@ -1,10 +1,10 @@
 package main;
 
 public class CommonConfig {
-  public String numberOfPreferredNeighbors;
-  public String unchokingInterval;
-  public String optimisticUnchokingInterval;
-  public String fileName;
-  public String fileSize;
-  public String pieceSize;
+    public static String numberOfPreferredNeighbors;
+    public static String unchokingInterval;
+    public static String optimisticUnchokingInterval;
+    public static String fileName;
+    public static String fileSize;
+    public static String pieceSize;
 }
