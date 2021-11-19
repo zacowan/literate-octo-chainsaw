@@ -48,7 +48,12 @@ public class RateTracker {
     public synchronized double getRate(String peerID) {
         Date t = new Date();
         double seconds = (t.getTime() - intervalStartTime.getTime()) / 1000;
-        return amountUploaded.get(peerID) / seconds;
+        Double amntUploaded = amountUploaded.get(peerID);
+        if (amntUploaded != null) {
+            return amntUploaded / seconds;
+        } else {
+            return 0.0;
+        }
     }
 
     /**
