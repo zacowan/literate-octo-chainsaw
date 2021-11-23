@@ -17,7 +17,6 @@ public class Client implements Runnable {
 
     PeerInfo hostInfo;
     PeerInfo targetInfo;
-    private HashMap<Integer, PeerInfo> peerMap;
 
     MessageHandler msgHandler;
 
@@ -69,6 +68,9 @@ public class Client implements Runnable {
                     case PIECE:
                         handlePieceReceived(received);
                         break;
+                    case HAVE:
+                        handleHaveReceived(received);
+                        break;
                     default:
                         DebugLogger.instance.log("Default case");
                         break;
@@ -110,6 +112,34 @@ public class Client implements Runnable {
         }
     }
 
+    /**
+     *
+     * Updates the target host's bitfield with the index received.
+     *
+     * @param received the message received, containing a `have` payload.
+     */
+    private void handleHaveReceived(Message received) {
+        // peerid
+        // bitfield - update the bitfield we think they have
+        // Update bitfield
+        HavePayload payload = (HavePayload) received.getPayload();
+        PeerInfoList.instance.getPeer(targetInfo.peerID).bitfield.set(payload.index, true);
+    }
+
+    /**
+     *
+     * Sends a `have` message to all of the connected peers.
+     *
+     * @param index the index that was successfully received.
+     */
+    private void sendHaveToConnectedPeers(int index) {
+        HashMap<String, ObjectOutputStream> outputStreams = Server.getOutputStreams();
+
+        for (ObjectOutputStream outputStream : outputStreams.values()) {
+            msgHandler.sendMessage(outputStream, MessageType.HAVE, new HavePayload(index));
+        }
+    }
+
     private void handlePieceReceived(Message received) {
         // Store piece in data structure
         PiecePayload payload = (PiecePayload) received.getPayload();
@@ -118,14 +148,24 @@ public class Client implements Runnable {
         RateTracker.instance.updateRate(targetInfo.peerID, payload.data.length);
         // Update bitfield
         PeerInfoList.instance.getPeer(hostInfo.peerID).bitfield.set(payload.index, true);
-        // Send "have" message
-        // TODO: change EmptyPayload to HavePayload with 4-byte piece index
-        msgHandler.sendMessage(out, MessageType.HAVE, new EmptyPayload());
-        msgHandler.receiveMessage(in);
-        // Send "request" message?
-        // TODO: determine index based on inspecting bitfield
-        // TODO: exit thread if all pieces from target peer have been received
-        msgHandler.sendMessage(out, MessageType.REQUEST, new RequestPayload(0));
+        // Send "have" message to connected peers
+        sendHaveToConnectedPeers(payload.index);
+        // Determine index of next request message
+        BitSet targetBitfield = PeerInfoList.instance.getPeer(targetInfo.peerID).bitfield;
+        BitSet thisBitfield = PeerInfoList.instance.getPeer(hostInfo.peerID).bitfield;
+
+        for (int i = 0; i < targetBitfield.size(); i++) {
+            if (targetBitfield.get(i) == true && thisBitfield.get(i) == false) {
+                // Send request message if target bitfield has an index that this peer does not
+                msgHandler.sendMessage(out, MessageType.REQUEST, new RequestPayload(i));
+                return;
+            }
+        }
+
+        // Send `not interested` message and exit
+        msgHandler.sendMessage(out, MessageType.NOT_INTERESTED, new EmptyPayload());
+
+        System.exit(0);
     }
 
     // need to know which peer sent the message
@@ -144,7 +184,10 @@ public class Client implements Runnable {
             }
         }
 
+        // Send `not interested` message and exit
         msgHandler.sendMessage(out, MessageType.NOT_INTERESTED, new EmptyPayload());
+
+        System.exit(0);
     }
 
     private void handleUnchokeReceived(Message received) {
