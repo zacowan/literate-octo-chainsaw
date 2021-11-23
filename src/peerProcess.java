@@ -97,12 +97,5 @@ public class peerProcess {
 
         // Initialize rate tracker
         RateTracker.instance = new RateTracker(PeerInfoList.instance.getList());
-
-        // ConnectedClientsList
-        // while (clients are connected)
-        // set some timer
-        // wait until timer is done
-        // Check list of connected clients
-        // Determine preferred neighbors + optimistically unchoked neighbor
     }
 }

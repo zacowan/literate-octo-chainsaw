@@ -154,6 +154,7 @@ public class Server implements Runnable {
 			}
 
 			while (true) {
+				DebugLogger.instance.log("Determining preferred neighbors");
 
 				List<String> newPreferred = new ArrayList<>();
 
@@ -201,6 +202,8 @@ public class Server implements Runnable {
 					setUnchoked(p, true);
 				}
 
+				DebugLogger.instance.log("Finished determining preferred neighbors");
+
 				// Wait the interval
 				try {
 					TimeUnit.SECONDS.sleep(time);
@@ -227,6 +230,7 @@ public class Server implements Runnable {
 			}
 
 			while (true) {
+				DebugLogger.instance.log("Determining optimistically unchoked neighbor");
 				// Every m seconds, pick 1 interested neighbor among choked at random that
 				// should be optimistically unchoked
 				// Get list of choked, yet interested neighbors
@@ -252,6 +256,8 @@ public class Server implements Runnable {
 				setUnchoked(prev, false);
 				prev = randomPeer;
 				setUnchoked(randomPeer, true);
+
+				DebugLogger.instance.log("Finished determining optimistically unchoked neighbor");
 
 				// Wait the interval
 				try {
