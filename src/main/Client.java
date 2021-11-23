@@ -162,10 +162,8 @@ public class Client implements Runnable {
             }
         }
 
-        // Send `not interested` message and exit
+        // Send `not interested` message
         msgHandler.sendMessage(out, MessageType.NOT_INTERESTED, new EmptyPayload());
-
-        System.exit(0);
     }
 
     // need to know which peer sent the message
@@ -184,10 +182,8 @@ public class Client implements Runnable {
             }
         }
 
-        // Send `not interested` message and exit
+        // Send `not interested` message
         msgHandler.sendMessage(out, MessageType.NOT_INTERESTED, new EmptyPayload());
-
-        System.exit(0);
     }
 
     private void handleUnchokeReceived(Message received) {
