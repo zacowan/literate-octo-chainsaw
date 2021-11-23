@@ -2,6 +2,7 @@
 ./src/main/PeerInfoList.java
 ./src/main/PieceStorage.java
 ./src/main/Utils.java
+./src/main/RateTracker.java
 ./src/main/PeerInfo.java
 ./src/main/Server.java
 ./src/main/CommonConfig.java
@@ -11,6 +12,7 @@
 ./src/main/messaging/payloads/Payload.java
 ./src/main/messaging/payloads/BitfieldPayload.java
 ./src/main/messaging/payloads/PiecePayload.java
+./src/main/messaging/payloads/HavePayload.java
 ./src/main/messaging/payloads/EmptyPayload.java
 ./src/main/messaging/MessageHandler.java
 ./src/main/messaging/MessageType.java
