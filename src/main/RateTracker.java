@@ -21,6 +21,7 @@ public class RateTracker {
     private Date intervalStartTime;
 
     public RateTracker(List<PeerInfo> peers) {
+        this.amountUploaded = new HashMap<>();
         for (PeerInfo peerInfo : peers) {
             amountUploaded.put(peerInfo.peerID, 0.0);
         }

@@ -49,8 +49,12 @@ public class Server implements Runnable {
 
 	private static HashMap<String, Boolean> unchoked = new HashMap<>();
 
-	public static synchronized boolean isUnchoked(String peerID) {
-		return unchoked.get(peerID);
+	public static synchronized Boolean isUnchoked(String peerID) {
+		if (unchoked.containsKey(peerID)) {
+			return unchoked.get(peerID);
+		} else {
+			return false;
+		}
 	}
 
 	public static synchronized void setUnchoked(String peerID, boolean val) {
@@ -170,6 +174,7 @@ public class Server implements Runnable {
 				List<String> toUnchoke = new ArrayList<>();
 				for (String p : newPreferred) {
 					if (!isUnchoked(p)) {
+						DebugLogger.instance.log("Add to toUnchoke %s", p);
 						toUnchoke.add(p);
 					}
 				}
@@ -190,6 +195,7 @@ public class Server implements Runnable {
 
 				// Send unchoke message to every peer that needs to be unchoked
 				for (int i = 0; i < toUnchoke.size(); i++) {
+					DebugLogger.instance.log("Unchoking %s", toUnchoke.get(i));
 					msgHandler.sendMessage(Server.getOutputStreams().get(toUnchoke.get(i)), MessageType.UNCHOKE,
 							new EmptyPayload());
 				}

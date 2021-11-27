@@ -147,7 +147,7 @@ public class Client implements Runnable {
         // Update upload rate
         RateTracker.instance.updateRate(targetInfo.peerID, payload.data.length);
         // Update bitfield
-        PeerInfoList.instance.getPeer(hostInfo.peerID).bitfield.set(payload.index, true);
+        PeerInfoList.instance.setThisPeerBitfieldIndex(payload.index);
         // Send "have" message to connected peers
         sendHaveToConnectedPeers(payload.index);
         // Determine index of next request message

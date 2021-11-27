@@ -7,6 +7,7 @@ import java.nio.channels.*;
 import java.util.*;
 
 import main.Utils;
+import main.logging.DebugLogger;
 
 public class RequestPayload extends Payload {
     public int index;

@@ -5,6 +5,9 @@ import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
+
+import main.logging.DebugLogger;
+
 import java.net.Socket;
 
 public class PeerInfoList {
@@ -76,6 +79,20 @@ public class PeerInfoList {
             }
         }
         return ret;
+    }
+
+    public synchronized void setThisPeerBitfieldIndex(int i) {
+        PeerInfo peer = peerInfoList.get(thisPeerIndex);
+        peer.bitfield.set(i);
+        peerInfoList.set(thisPeerIndex, peer);
+
+    }
+
+    public void printThisBitfield() {
+        PeerInfo peer = peerInfoList.get(thisPeerIndex);
+        for (int j = 0; j < peer.bitfield.size(); j++) {
+            DebugLogger.instance.log("(%d, %s)", j, peer.bitfield.get(j));
+        }
     }
 
     public synchronized void updatePeer(int i, PeerInfo peer) {

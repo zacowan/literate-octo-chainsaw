@@ -24,7 +24,8 @@ public class Message {
     private BitSet bitfield;
 
     public Message(MessageType type, Payload payload) {
-        this.length = payload.getLength();
+        // +1 because we should include the type
+        this.length = payload.getLength() + 1;
         this.type = type;
         this.payload = payload.getBytes();
     }
@@ -44,8 +45,9 @@ public class Message {
         this.length = Utils.bytesToInt(lengthBytes);
 
         // Set message payload
-        if (this.length > 5) {
-            this.payload = Arrays.copyOfRange(bytes, 5, this.length);
+        if (this.length > 0) {
+            // -1 because we should not include the type
+            this.payload = Arrays.copyOfRange(bytes, 5, 5 + this.length - 1);
         } else {
             this.payload = new byte[0];
         }
