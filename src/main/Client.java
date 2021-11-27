@@ -11,6 +11,26 @@ import main.messaging.*;
 import main.messaging.payloads.*;
 
 public class Client implements Runnable {
+    /**
+     * Mapping of peerID -> ObjectOutputStream.
+     */
+    private static HashMap<String, ObjectOutputStream> outputStreams = new HashMap<>();
+
+    /**
+     * @param peerID the peerID associated with the output stream.
+     * @param out    the output stream associated with the target peer.
+     */
+    public static synchronized void insertOutputStream(String peerID, ObjectOutputStream out) {
+        outputStreams.put(peerID, out);
+    }
+
+    /**
+     * @return a hash map of peerID -> ObjectOutputStream.
+     */
+    public static synchronized HashMap<String, ObjectOutputStream> getOutputStreams() {
+        return outputStreams;
+    }
+
     Socket requestSocket; // socket connect to the server
     ObjectOutputStream out; // stream write to the socket
     ObjectInputStream in; // stream read from the socket
@@ -45,6 +65,9 @@ public class Client implements Runnable {
                 DebugLogger.instance.log("Handshake valid");
                 FileLogger.instance.logTCPConnectionTo(targetInfo.peerID);
 
+                // Store the output stream
+                Server.insertOutputStream(targetInfo.peerID, out);
+
                 // Send bitfield message
                 BitSet thisBitfield = PeerInfoList.instance.getPeer(hostInfo.peerID).bitfield;
                 msgHandler.sendMessage(out, MessageType.BITFIELD, new BitfieldPayload(thisBitfield));
@@ -56,26 +79,27 @@ public class Client implements Runnable {
 
                     // Handle the received message
                     switch (received.type) {
-                    case BITFIELD:
-                        handleBitfieldReceived(received);
-                        break;
-                    case CHOKE:
-                        handleChokeReceived(received);
-                        break;
-                    case UNCHOKE:
-                        handleUnchokeReceived(received);
-                        break;
-                    case PIECE:
-                        handlePieceReceived(received);
-                        break;
-                    case HAVE:
-                        handleHaveReceived(received);
-                        break;
-                    default:
-                        DebugLogger.instance.log("Default case");
-                        break;
+                        case BITFIELD:
+                            handleBitfieldReceived(received);
+                            break;
+                        case CHOKE:
+                            handleChokeReceived(received);
+                            break;
+                        case UNCHOKE:
+                            handleUnchokeReceived(received);
+                            break;
+                        case PIECE:
+                            handlePieceReceived(received);
+                            break;
+                        case HAVE:
+                            handleHaveReceived(received);
+                            break;
+                        default:
+                            DebugLogger.instance.log("Default case");
+                            break;
                     }
                 }
+                DebugLogger.instance.log("Have the entire file.");
             } else {
                 DebugLogger.instance.err("Handshake invalid");
             }
@@ -123,7 +147,7 @@ public class Client implements Runnable {
         // bitfield - update the bitfield we think they have
         // Update bitfield
         HavePayload payload = (HavePayload) received.getPayload();
-        PeerInfoList.instance.getPeer(targetInfo.peerID).bitfield.set(payload.index, true);
+        PeerInfoList.instance.setPeerBitfieldIndex(targetInfo.peerID, payload.index);
     }
 
     /**
@@ -133,9 +157,14 @@ public class Client implements Runnable {
      * @param index the index that was successfully received.
      */
     private void sendHaveToConnectedPeers(int index) {
-        HashMap<String, ObjectOutputStream> outputStreams = Server.getOutputStreams();
+        HashMap<String, ObjectOutputStream> serverOutputStreams = Server.getOutputStreams();
+        HashMap<String, ObjectOutputStream> clientOutputStreams = Client.getOutputStreams();
 
-        for (ObjectOutputStream outputStream : outputStreams.values()) {
+        for (ObjectOutputStream outputStream : serverOutputStreams.values()) {
+            msgHandler.sendMessage(outputStream, MessageType.HAVE, new HavePayload(index));
+        }
+
+        for (ObjectOutputStream outputStream : clientOutputStreams.values()) {
             msgHandler.sendMessage(outputStream, MessageType.HAVE, new HavePayload(index));
         }
     }
@@ -147,23 +176,32 @@ public class Client implements Runnable {
         // Update upload rate
         RateTracker.instance.updateRate(targetInfo.peerID, payload.data.length);
         // Update bitfield
-        PeerInfoList.instance.setThisPeerBitfieldIndex(payload.index);
+        PeerInfoList.instance.setPeerBitfieldIndex(hostInfo.peerID, payload.index);
         // Send "have" message to connected peers
         sendHaveToConnectedPeers(payload.index);
         // Determine index of next request message
         BitSet targetBitfield = PeerInfoList.instance.getPeer(targetInfo.peerID).bitfield;
         BitSet thisBitfield = PeerInfoList.instance.getPeer(hostInfo.peerID).bitfield;
-
+        // Find needed indices
+        List<Integer> interestedIndices = new ArrayList<>();
         for (int i = 0; i < targetBitfield.size(); i++) {
-            if (targetBitfield.get(i) == true && thisBitfield.get(i) == false) {
-                // Send request message if target bitfield has an index that this peer does not
-                msgHandler.sendMessage(out, MessageType.REQUEST, new RequestPayload(i));
-                return;
+            boolean targetHas = targetBitfield.get(i);
+            boolean thisHas = thisBitfield.get(i);
+            if (targetHas && !thisHas) {
+                interestedIndices.add(i);
             }
         }
-
-        // Send `not interested` message
-        msgHandler.sendMessage(out, MessageType.NOT_INTERESTED, new EmptyPayload());
+        // unchoked but they have nothing we want
+        if (interestedIndices.size() == 0) {
+            // send not interested
+            msgHandler.sendMessage(out, MessageType.NOT_INTERESTED, new EmptyPayload());
+        }
+        // unchoked and they have things we don't
+        else {
+            // Send request message with random index
+            int randIndex = interestedIndices.get(new Random().nextInt(interestedIndices.size()));
+            msgHandler.sendMessage(out, MessageType.REQUEST, new RequestPayload(randIndex));
+        }
     }
 
     // need to know which peer sent the message

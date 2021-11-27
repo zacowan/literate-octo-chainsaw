@@ -58,7 +58,7 @@ public class PeerInfoList {
         return peerInfoList.get(i);
     }
 
-    public synchronized int getPeerIndex(String peerID) {
+    public int getPeerIndex(String peerID) {
         int ret = -1;
         for (int i = 0; i < peerInfoList.size(); i++) {
             PeerInfo peer = peerInfoList.get(i);
@@ -81,11 +81,26 @@ public class PeerInfoList {
         return ret;
     }
 
-    public synchronized void setThisPeerBitfieldIndex(int i) {
-        PeerInfo peer = peerInfoList.get(thisPeerIndex);
+    public synchronized void setPeerBitfieldIndex(String peerID, int i) {
+        int index = getPeerIndex(peerID);
+        PeerInfo peer = peerInfoList.get(index);
         peer.bitfield.set(i);
-        peerInfoList.set(thisPeerIndex, peer);
+        // Check if peer has entire file
+        // TODO: fix this functionality
+        boolean hasFile = true;
+        for (int j = 0; j < peer.bitfield.size(); j++) {
+            if (!peer.bitfield.get(j)) {
+                hasFile = false;
+                break;
+            }
+        }
 
+        peer.hasFile = hasFile;
+        if (hasFile) {
+            DebugLogger.instance.log("Peer %s has the file.", peerID);
+        }
+
+        peerInfoList.set(index, peer);
     }
 
     public void printThisBitfield() {

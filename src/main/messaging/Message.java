@@ -9,6 +9,7 @@ import java.util.*;
 import main.logging.*;
 import main.messaging.payloads.BitfieldPayload;
 import main.messaging.payloads.EmptyPayload;
+import main.messaging.payloads.HavePayload;
 import main.messaging.payloads.Payload;
 import main.messaging.payloads.PiecePayload;
 import main.messaging.payloads.RequestPayload;
@@ -54,54 +55,56 @@ public class Message {
 
         // Set message type
         switch (typeByte) {
-        case 0:
-            this.type = MessageType.CHOKE;
-            break;
+            case 0:
+                this.type = MessageType.CHOKE;
+                break;
 
-        case 1:
-            this.type = MessageType.UNCHOKE;
-            break;
+            case 1:
+                this.type = MessageType.UNCHOKE;
+                break;
 
-        case 2:
-            this.type = MessageType.INTERESTED;
-            break;
+            case 2:
+                this.type = MessageType.INTERESTED;
+                break;
 
-        case 3:
-            this.type = MessageType.NOT_INTERESTED;
-            break;
+            case 3:
+                this.type = MessageType.NOT_INTERESTED;
+                break;
 
-        case 4:
-            this.type = MessageType.HAVE;
-            break;
+            case 4:
+                this.type = MessageType.HAVE;
+                break;
 
-        case 5:
-            this.type = MessageType.BITFIELD;
-            break;
+            case 5:
+                this.type = MessageType.BITFIELD;
+                break;
 
-        case 6:
-            this.type = MessageType.REQUEST;
-            break;
+            case 6:
+                this.type = MessageType.REQUEST;
+                break;
 
-        case 7:
-            this.type = MessageType.PIECE;
-            break;
+            case 7:
+                this.type = MessageType.PIECE;
+                break;
 
-        default:
-            DebugLogger.instance.err("Error determining message type");
-            break;
+            default:
+                DebugLogger.instance.err("Error determining message type");
+                break;
         }
     }
 
     public Payload getPayload() {
         switch (type) {
-        case REQUEST:
-            return new RequestPayload(payload);
-        case PIECE:
-            return new PiecePayload(payload);
-        case BITFIELD:
-            return new BitfieldPayload(payload);
-        default:
-            return new EmptyPayload();
+            case REQUEST:
+                return new RequestPayload(payload);
+            case PIECE:
+                return new PiecePayload(payload);
+            case BITFIELD:
+                return new BitfieldPayload(payload);
+            case HAVE:
+                return new HavePayload(payload);
+            default:
+                return new EmptyPayload();
         }
     }
 

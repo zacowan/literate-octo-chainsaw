@@ -157,7 +157,7 @@ public class Server implements Runnable {
 				System.out.print(e);
 			}
 
-			while (true) {
+			while (PeerInfoList.instance.checkAllPeersHaveFile() == false) {
 				DebugLogger.instance.log("Determining preferred neighbors");
 
 				List<String> newPreferred = new ArrayList<>();
@@ -235,7 +235,7 @@ public class Server implements Runnable {
 				System.out.println(e);
 			}
 
-			while (true) {
+			while (PeerInfoList.instance.checkAllPeersHaveFile() == false) {
 				DebugLogger.instance.log("Determining optimistically unchoked neighbor");
 				// Every m seconds, pick 1 interested neighbor among choked at random that
 				// should be optimistically unchoked
@@ -324,21 +324,24 @@ public class Server implements Runnable {
 
 						// Handle the received message
 						switch (received.type) {
-						case BITFIELD:
-							handleBitfieldReceived(received);
-							break;
-						case INTERESTED:
-							handleInterestedReceived(received);
-							break;
-						case NOT_INTERESTED:
-							handleNotInterestedReceived(received);
-							break;
-						case REQUEST:
-							handleRequestReceived(received);
-							break;
-						default:
-							DebugLogger.instance.log("Default case");
-							break;
+							case BITFIELD:
+								handleBitfieldReceived(received);
+								break;
+							case INTERESTED:
+								handleInterestedReceived(received);
+								break;
+							case NOT_INTERESTED:
+								handleNotInterestedReceived(received);
+								break;
+							case REQUEST:
+								handleRequestReceived(received);
+								break;
+							case HAVE:
+								handleHaveReceived(received);
+								break;
+							default:
+								DebugLogger.instance.log("Default case");
+								break;
 						}
 					}
 
@@ -384,6 +387,20 @@ public class Server implements Runnable {
 			RequestPayload payload = (RequestPayload) received.getPayload();
 			byte[] piece = PieceStorage.instance.getPiece(payload.index);
 			msgHandler.sendMessage(out, MessageType.PIECE, new PiecePayload(payload.index, piece));
+		}
+
+		/**
+		 *
+		 * Updates the target host's bitfield with the index received.
+		 *
+		 * @param received the message received, containing a `have` payload.
+		 */
+		private void handleHaveReceived(Message received) {
+			// peerid
+			// bitfield - update the bitfield we think they have
+			// Update bitfield
+			HavePayload payload = (HavePayload) received.getPayload();
+			PeerInfoList.instance.setPeerBitfieldIndex(connectedInfo.peerID, payload.index);
 		}
 	}
 }
