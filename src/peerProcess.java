@@ -37,6 +37,8 @@ public class peerProcess {
             CommonConfig.fileName = scanner.nextLine().split(" ")[1];
             CommonConfig.fileSize = scanner.nextLine().split(" ")[1];
             CommonConfig.pieceSize = scanner.nextLine().split(" ")[1];
+            CommonConfig.numPieces = (int) Math
+                    .ceil(Double.parseDouble(CommonConfig.fileSize) / Double.parseDouble(CommonConfig.pieceSize));
             scanner.close();
         } catch (Exception e) {
             DebugLogger.instance.err("Error parsing %s file, %s", CC_FILENAME, e.getMessage());
@@ -62,6 +64,12 @@ public class peerProcess {
         } catch (Exception e) {
             DebugLogger.instance.err("Error parsing %s file, %s", PI_FILENAME, e.getMessage());
         }
+
+        // Initialize piece storage
+        PieceStorage.instance = new PieceStorage(PeerInfoList.instance.getThisPeer().hasFile);
+
+        // Initialize rate tracker
+        RateTracker.instance = new RateTracker(PeerInfoList.instance.getList());
 
         // spawn server
         Thread serverThread;
@@ -91,11 +99,5 @@ public class peerProcess {
                 break;
             }
         }
-
-        // Initialize piece storage
-        PieceStorage.instance = new PieceStorage(PeerInfoList.instance.getThisPeer().hasFile);
-
-        // Initialize rate tracker
-        RateTracker.instance = new RateTracker(PeerInfoList.instance.getList());
     }
 }

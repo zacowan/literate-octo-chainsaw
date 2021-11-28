@@ -7,11 +7,10 @@ Diagram: https://drive.google.com/file/d/170t8bSQvOByvuJmGKxeqEdJOYjQb3RMS/view?
 ## How to Run
 
 1. Make sure `Common.cfg` and `PeerInfo.cfg` into the `src/`.
-2. Go into the src directory with `cd src`.
-3. Compile the source code with `javac -d _build_ @sources.txt`.
-4. Go into the `_build_` directory with `cd ./_build_`.
-5. Run the first peer with `java peerProcess PEER_ID1`.
-6. In a separate terminal, `java peerProcess PEER_ID2`.
+2. Compile the source code with `javac -d _build_ @sources.txt`.
+3. Go into the `_build_` directory with `cd ./_build_`.
+4. Run the first peer with `java peerProcess PEER_ID1`.
+5. In a separate terminal, `java peerProcess PEER_ID2`.
 
 ### Using `run_dev.sh`
 

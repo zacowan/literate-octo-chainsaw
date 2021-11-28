@@ -84,9 +84,11 @@ public class Client implements Runnable {
                             break;
                         case CHOKE:
                             handleChokeReceived(received);
+                            FileLogger.instance.logChocking(targetInfo.peerID);
                             break;
                         case UNCHOKE:
                             handleUnchokeReceived(received);
+                            FileLogger.instance.logUnchoking(targetInfo.peerID);
                             break;
                         case PIECE:
                             handlePieceReceived(received);
@@ -99,7 +101,10 @@ public class Client implements Runnable {
                             break;
                     }
                 }
-                DebugLogger.instance.log("Have the entire file.");
+                DebugLogger.instance.log("Client exiting...");
+
+                // Log
+                FileLogger.instance.logCompletionDownload();
             } else {
                 DebugLogger.instance.err("Handshake invalid");
             }
@@ -116,6 +121,7 @@ public class Client implements Runnable {
                 out.close();
                 requestSocket.close();
                 DebugLogger.instance.log("Successfully closed client for %s", hostInfo.peerID);
+                System.exit(0);
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             }
@@ -148,6 +154,9 @@ public class Client implements Runnable {
         // Update bitfield
         HavePayload payload = (HavePayload) received.getPayload();
         PeerInfoList.instance.setPeerBitfieldIndex(targetInfo.peerID, payload.index);
+
+        // Log
+        FileLogger.instance.logHaveMessage(targetInfo.peerID, payload.index);
     }
 
     /**
@@ -160,8 +169,13 @@ public class Client implements Runnable {
         HashMap<String, ObjectOutputStream> serverOutputStreams = Server.getOutputStreams();
         HashMap<String, ObjectOutputStream> clientOutputStreams = Client.getOutputStreams();
 
-        for (ObjectOutputStream outputStream : serverOutputStreams.values()) {
-            msgHandler.sendMessage(outputStream, MessageType.HAVE, new HavePayload(index));
+        for (Map.Entry<String, ObjectOutputStream> set : serverOutputStreams.entrySet()) {
+            String peerID = set.getKey();
+            ObjectOutputStream outputStream = set.getValue();
+            // whats in serverOutputStream isn't in client outputstream
+            if (!clientOutputStreams.containsKey(peerID)) {
+                msgHandler.sendMessage(outputStream, MessageType.HAVE, new HavePayload(index));
+            }
         }
 
         for (ObjectOutputStream outputStream : clientOutputStreams.values()) {
@@ -202,6 +216,9 @@ public class Client implements Runnable {
             int randIndex = interestedIndices.get(new Random().nextInt(interestedIndices.size()));
             msgHandler.sendMessage(out, MessageType.REQUEST, new RequestPayload(randIndex));
         }
+
+        // Log
+        FileLogger.instance.logDownloadPiece(targetInfo.peerID, payload.index, thisBitfield.cardinality());
     }
 
     // need to know which peer sent the message
@@ -222,6 +239,7 @@ public class Client implements Runnable {
 
         // Send `not interested` message
         msgHandler.sendMessage(out, MessageType.NOT_INTERESTED, new EmptyPayload());
+        PeerInfoList.instance.printThisBitfield();
     }
 
     private void handleUnchokeReceived(Message received) {

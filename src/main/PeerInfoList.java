@@ -8,8 +8,6 @@ import java.util.*;
 
 import main.logging.DebugLogger;
 
-import java.net.Socket;
-
 public class PeerInfoList {
 
     public static PeerInfoList instance = null;
@@ -20,6 +18,7 @@ public class PeerInfoList {
     public synchronized boolean checkAllPeersHaveFile() {
         for (PeerInfo p : peerInfoList) {
             if (p.hasFile == false) {
+                DebugLogger.instance.log("Peer %s doesn't have the whole file", p.peerID);
                 return false;
             }
         }
@@ -86,19 +85,8 @@ public class PeerInfoList {
         PeerInfo peer = peerInfoList.get(index);
         peer.bitfield.set(i);
         // Check if peer has entire file
-        // TODO: fix this functionality
-        boolean hasFile = true;
-        for (int j = 0; j < peer.bitfield.size(); j++) {
-            if (!peer.bitfield.get(j)) {
-                hasFile = false;
-                break;
-            }
-        }
-
+        boolean hasFile = peer.bitfield.cardinality() == CommonConfig.numPieces;
         peer.hasFile = hasFile;
-        if (hasFile) {
-            DebugLogger.instance.log("Peer %s has the file.", peerID);
-        }
 
         peerInfoList.set(index, peer);
     }

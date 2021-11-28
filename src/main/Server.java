@@ -210,6 +210,9 @@ public class Server implements Runnable {
 
 				DebugLogger.instance.log("Finished determining preferred neighbors");
 
+				// Log
+				FileLogger.instance.logChangePreferredNeighbors(newPreferred);
+
 				// Wait the interval
 				try {
 					TimeUnit.SECONDS.sleep(time);
@@ -217,6 +220,9 @@ public class Server implements Runnable {
 					System.out.print(e);
 				}
 			}
+
+			DebugLogger.instance.log("Exiting preferred neighbor thread...");
+			System.exit(0);
 		}
 	}
 
@@ -265,6 +271,8 @@ public class Server implements Runnable {
 
 				DebugLogger.instance.log("Finished determining optimistically unchoked neighbor");
 
+				FileLogger.instance.logChangeOptUnchokedNeighbor(prev);
+
 				// Wait the interval
 				try {
 					TimeUnit.SECONDS.sleep(time);
@@ -273,6 +281,8 @@ public class Server implements Runnable {
 				}
 			}
 
+			DebugLogger.instance.log("Exiting optimistically unchoked neighbor thread...");
+			System.exit(0);
 		}
 	}
 
@@ -329,9 +339,11 @@ public class Server implements Runnable {
 								break;
 							case INTERESTED:
 								handleInterestedReceived(received);
+								FileLogger.instance.logInterestedMessage(connectedInfo.peerID);
 								break;
 							case NOT_INTERESTED:
 								handleNotInterestedReceived(received);
+								FileLogger.instance.logNotInterestedMessage(connectedInfo.peerID);
 								break;
 							case REQUEST:
 								handleRequestReceived(received);
@@ -344,7 +356,7 @@ public class Server implements Runnable {
 								break;
 						}
 					}
-
+					DebugLogger.instance.log("Server exiting...");
 				} else {
 					DebugLogger.instance.err("Handshake failed");
 				}
@@ -357,6 +369,7 @@ public class Server implements Runnable {
 					out.close();
 					connection.close();
 					DebugLogger.instance.log("Successfully closed server");
+					System.exit(0);
 				} catch (IOException ioException) {
 					DebugLogger.instance.err("Client %d disconnected", no);
 				}
@@ -401,6 +414,9 @@ public class Server implements Runnable {
 			// Update bitfield
 			HavePayload payload = (HavePayload) received.getPayload();
 			PeerInfoList.instance.setPeerBitfieldIndex(connectedInfo.peerID, payload.index);
+
+			// Log
+			FileLogger.instance.logHaveMessage(connectedInfo.peerID, payload.index);
 		}
 	}
 }
