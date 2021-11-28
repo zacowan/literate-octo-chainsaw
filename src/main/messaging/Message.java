@@ -22,20 +22,12 @@ public class Message {
     public MessageType type;
     // this.length bytes
     private byte[] payload;
-    private BitSet bitfield;
 
     public Message(MessageType type, Payload payload) {
         // +1 because we should include the type
         this.length = payload.getLength() + 1;
         this.type = type;
         this.payload = payload.getBytes();
-    }
-
-    public Message(MessageType type, Payload payload, BitSet bitfield) {
-        this.length = payload.getLength();
-        this.type = type;
-        this.payload = payload.getBytes();
-        this.bitfield = bitfield;
     }
 
     public Message(byte[] bytes) {
@@ -46,7 +38,7 @@ public class Message {
         this.length = Utils.bytesToInt(lengthBytes);
 
         // Set message payload
-        if (this.length > 0) {
+        if (this.length > 1) {
             // -1 because we should not include the type
             this.payload = Arrays.copyOfRange(bytes, 5, 5 + this.length - 1);
         } else {
@@ -109,7 +101,7 @@ public class Message {
     }
 
     public byte[] getBytes() {
-        int size = length + 4 + 1;
+        int size = length + 4;
         byte[] bytes = new byte[size];
 
         // Transform length into a byte array

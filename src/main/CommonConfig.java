@@ -7,4 +7,5 @@ public class CommonConfig {
     public static String fileName;
     public static String fileSize;
     public static String pieceSize;
+    public static int numPieces;
 }

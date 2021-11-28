@@ -23,7 +23,7 @@ public class FileLogger {
 
     public FileLogger(String hostID) {
         this.hostID = hostID;
-        this.filename = "peer_log_" + hostID + ".log";
+        this.filename = "log_peer_" + hostID + ".log";
         createLogFile();
     }
 
@@ -49,7 +49,7 @@ public class FileLogger {
 
     private void writeLogToFile(String log) {
         try {
-            writer = new FileWriter(filename);
+            writer = new FileWriter(filename, true);
             writer.append(log + ".\n");
         } catch (IOException e) {
             DebugLogger.instance.err(e.getMessage());
@@ -80,14 +80,15 @@ public class FileLogger {
     }
 
     // Zach
-    public synchronized void logChangePreferredNeighbors(ArrayList<String> preferredNeighbors) {
-        String log = getTimestamp() + getPeerString(hostID) + " has the preferred neighbors ";
+    public synchronized void logChangePreferredNeighbors(List<String> preferredNeighbors) {
+        String log = getTimestamp() + getPeerString(hostID) + " has the preferred neighbors [";
         for (int i = 0; i < preferredNeighbors.size(); i++) {
             log += preferredNeighbors.get(i);
             if (i != preferredNeighbors.size() - 1) {
                 log += ",";
             }
         }
+        log += "]";
         writeLogToFile(log);
     }
 
@@ -111,26 +112,26 @@ public class FileLogger {
     }
 
     // Joel
-    public synchronized void logHaveMessage(int peerID, int pieceIndex) {
+    public synchronized void logHaveMessage(String peerID, int pieceIndex) {
         String log = getTimestamp() + getPeerString(hostID) + " received the 'have' message from " + peerID
                 + " for the piece " + pieceIndex;
         writeLogToFile(log);
     }
 
     // Joel
-    public synchronized void logInterestedMessage(int peerID) {
+    public synchronized void logInterestedMessage(String peerID) {
         String log = getTimestamp() + getPeerString(hostID) + " received the 'interested' message from " + peerID;
         writeLogToFile(log);
     }
 
     // Joel
-    public synchronized void logNotInterestedMessage(int peerID) {
+    public synchronized void logNotInterestedMessage(String peerID) {
         String log = getTimestamp() + getPeerString(hostID) + " received the 'not interested' message from " + peerID;
         writeLogToFile(log);
     }
 
     // Joel
-    public synchronized void logDownloadPiece(int peerID, int pieceIndex, int numPieces) {
+    public synchronized void logDownloadPiece(String peerID, int pieceIndex, int numPieces) {
         String log = getTimestamp() + getPeerString(hostID) + " has downloaded the piece " + pieceIndex + " from "
                 + peerID + ". Now the number of pieces it has is " + numPieces;
         writeLogToFile(log);
