@@ -50,7 +50,8 @@ public class Client implements Runnable {
         try {
             // create a socket to connect to the server
             requestSocket = new Socket(targetInfo.hostname, Integer.parseInt(targetInfo.port));
-            DebugLogger.instance.log("Opened socket to %s:%s", targetInfo.hostname, targetInfo.port);
+            DebugLogger.instance.log("Opened socket to peer %s on %s:%s", targetInfo.peerID, targetInfo.hostname,
+                    targetInfo.port);
 
             // initialize inputStream and outputStream
             out = new ObjectOutputStream(requestSocket.getOutputStream());
@@ -58,24 +59,28 @@ public class Client implements Runnable {
             in = new ObjectInputStream(requestSocket.getInputStream());
 
             // Perform handshake
+            DebugLogger.instance.log("Sent handshake message to peer %s", targetInfo.peerID);
             msgHandler.sendHandshake(out, hostInfo.peerID);
             boolean checkHandshake = msgHandler.receiveHandshakeClient(in, targetInfo.peerID);
+            DebugLogger.instance.log("Handshake message received from peer %s, verifying...", targetInfo.peerID);
 
             if (checkHandshake) {
-                DebugLogger.instance.log("Handshake valid");
+                DebugLogger.instance.log("Handshake completed with peer %s", targetInfo.peerID);
                 FileLogger.instance.logTCPConnectionTo(targetInfo.peerID);
 
                 // Store the output stream
                 Server.insertOutputStream(targetInfo.peerID, out);
 
                 // Send bitfield message
+                DebugLogger.instance.log("Sent bitfield message to peer %s", targetInfo.peerID);
                 BitSet thisBitfield = PeerInfoList.instance.getPeer(hostInfo.peerID).bitfield;
                 msgHandler.sendMessage(out, MessageType.BITFIELD, new BitfieldPayload(thisBitfield));
 
-                while (PeerInfoList.instance.getThisPeer().hasFile == false) {
+                while (PeerInfoList.instance.checkAllPeersHaveFile() == false) {
                     // Wait for message
                     Message received = msgHandler.receiveMessage(in);
-                    DebugLogger.instance.log("Received %s message", received.type.toString());
+                    DebugLogger.instance.log("Received %s message from peer %s", received.type.toString(),
+                            targetInfo.peerID);
 
                     // Handle the received message
                     switch (received.type) {
@@ -84,11 +89,9 @@ public class Client implements Runnable {
                             break;
                         case CHOKE:
                             handleChokeReceived(received);
-                            FileLogger.instance.logChocking(targetInfo.peerID);
                             break;
                         case UNCHOKE:
                             handleUnchokeReceived(received);
-                            FileLogger.instance.logUnchoking(targetInfo.peerID);
                             break;
                         case PIECE:
                             handlePieceReceived(received);
@@ -101,10 +104,8 @@ public class Client implements Runnable {
                             break;
                     }
                 }
+                // All peers have the file, exit
                 DebugLogger.instance.log("Client exiting...");
-
-                // Log
-                FileLogger.instance.logCompletionDownload();
             } else {
                 DebugLogger.instance.err("Handshake invalid");
             }
@@ -120,7 +121,7 @@ public class Client implements Runnable {
                 in.close();
                 out.close();
                 requestSocket.close();
-                DebugLogger.instance.log("Successfully closed client for %s", hostInfo.peerID);
+                DebugLogger.instance.log("Successfully closed client connected to peer %s", targetInfo.peerID);
                 System.exit(0);
             } catch (IOException ioException) {
                 ioException.printStackTrace();
@@ -153,10 +154,10 @@ public class Client implements Runnable {
         // bitfield - update the bitfield we think they have
         // Update bitfield
         HavePayload payload = (HavePayload) received.getPayload();
-        PeerInfoList.instance.setPeerBitfieldIndex(targetInfo.peerID, payload.index);
-
         // Log
         FileLogger.instance.logHaveMessage(targetInfo.peerID, payload.index);
+        // Update bitfield
+        PeerInfoList.instance.setPeerBitfieldIndex(targetInfo.peerID, payload.index);
     }
 
     /**
@@ -196,6 +197,11 @@ public class Client implements Runnable {
         // Determine index of next request message
         BitSet targetBitfield = PeerInfoList.instance.getPeer(targetInfo.peerID).bitfield;
         BitSet thisBitfield = PeerInfoList.instance.getPeer(hostInfo.peerID).bitfield;
+        // Log
+        FileLogger.instance.logDownloadPiece(targetInfo.peerID, payload.index, thisBitfield.cardinality());
+        if (PeerInfoList.instance.getPeer(hostInfo.peerID).hasFile) {
+            FileLogger.instance.logCompletionDownload();
+        }
         // Find needed indices
         List<Integer> interestedIndices = new ArrayList<>();
         for (int i = 0; i < targetBitfield.size(); i++) {
@@ -216,17 +222,15 @@ public class Client implements Runnable {
             int randIndex = interestedIndices.get(new Random().nextInt(interestedIndices.size()));
             msgHandler.sendMessage(out, MessageType.REQUEST, new RequestPayload(randIndex));
         }
-
-        // Log
-        FileLogger.instance.logDownloadPiece(targetInfo.peerID, payload.index, thisBitfield.cardinality());
     }
 
     // need to know which peer sent the message
 
     private void handleChokeReceived(Message received) {
+        // Log
+        FileLogger.instance.logChocking(targetInfo.peerID);
         // Compare bitfields to determine if we are interested
         // Send interested/not interested message
-
         BitSet targetBitfield = PeerInfoList.instance.getPeer(targetInfo.peerID).bitfield;
         BitSet thisBitfield = PeerInfoList.instance.getPeer(hostInfo.peerID).bitfield;
 
@@ -243,6 +247,8 @@ public class Client implements Runnable {
     }
 
     private void handleUnchokeReceived(Message received) {
+        // Log
+        FileLogger.instance.logUnchoking(targetInfo.peerID);
         // Compare stored bitfield of to ours to see what data to request
         BitSet targetBitfield = PeerInfoList.instance.getPeer(targetInfo.peerID).bitfield;
         BitSet thisBitfield = PeerInfoList.instance.getPeer(hostInfo.peerID).bitfield;

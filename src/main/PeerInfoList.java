@@ -18,7 +18,6 @@ public class PeerInfoList {
     public synchronized boolean checkAllPeersHaveFile() {
         for (PeerInfo p : peerInfoList) {
             if (p.hasFile == false) {
-                DebugLogger.instance.log("Peer %s doesn't have the whole file", p.peerID);
                 return false;
             }
         }
@@ -87,7 +86,6 @@ public class PeerInfoList {
         // Check if peer has entire file
         boolean hasFile = peer.bitfield.cardinality() == CommonConfig.numPieces;
         peer.hasFile = hasFile;
-
         peerInfoList.set(index, peer);
     }
 

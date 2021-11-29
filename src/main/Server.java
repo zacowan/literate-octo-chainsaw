@@ -76,13 +76,13 @@ public class Server implements Runnable {
 			try {
 				for (int i = 0; i < numHandlers; i++) {
 					new Handler(listener.accept(), i, hostInfo).start();
-					DebugLogger.instance.log("Client %d is connected", i);
 				}
 			} finally {
 				listener.close();
 			}
 		} catch (Exception e) {
-			System.err.println(e);
+			e.printStackTrace();
+			DebugLogger.instance.err("Error spawning client handler threads: %s", e.getMessage());
 		}
 		// Spawn the threads for choosing neighbors to send data to
 		new Thread(new HandlePreferredNeighbors()).run();
@@ -152,13 +152,16 @@ public class Server implements Runnable {
 
 			// Wait the first interval
 			try {
+				DebugLogger.instance.log("Preferred neighbor thread sleeping...");
 				TimeUnit.SECONDS.sleep(time);
+				DebugLogger.instance.log("Preferred neighbor thread awake");
 			} catch (InterruptedException e) {
-				System.out.print(e);
+				e.printStackTrace();
+				DebugLogger.instance.err("Error sleeping: %s", e.getMessage());
 			}
 
 			while (PeerInfoList.instance.checkAllPeersHaveFile() == false) {
-				DebugLogger.instance.log("Determining preferred neighbors");
+				DebugLogger.instance.log("Determining preferred neighbors...");
 
 				List<String> newPreferred = new ArrayList<>();
 
@@ -174,7 +177,6 @@ public class Server implements Runnable {
 				List<String> toUnchoke = new ArrayList<>();
 				for (String p : newPreferred) {
 					if (!isUnchoked(p)) {
-						DebugLogger.instance.log("Add to toUnchoke %s", p);
 						toUnchoke.add(p);
 					}
 				}
@@ -195,7 +197,6 @@ public class Server implements Runnable {
 
 				// Send unchoke message to every peer that needs to be unchoked
 				for (int i = 0; i < toUnchoke.size(); i++) {
-					DebugLogger.instance.log("Unchoking %s", toUnchoke.get(i));
 					msgHandler.sendMessage(Server.getOutputStreams().get(toUnchoke.get(i)), MessageType.UNCHOKE,
 							new EmptyPayload());
 				}
@@ -208,21 +209,23 @@ public class Server implements Runnable {
 					setUnchoked(p, true);
 				}
 
-				DebugLogger.instance.log("Finished determining preferred neighbors");
+				DebugLogger.instance.log("Finished determining new preferred neighbors");
 
 				// Log
 				FileLogger.instance.logChangePreferredNeighbors(newPreferred);
 
 				// Wait the interval
 				try {
+					DebugLogger.instance.log("Preferred neighbor thread sleeping...");
 					TimeUnit.SECONDS.sleep(time);
+					DebugLogger.instance.log("Preferred neighbor thread awake");
 				} catch (InterruptedException e) {
-					System.out.print(e);
+					e.printStackTrace();
+					DebugLogger.instance.err("Error sleeping: %s", e.getMessage());
 				}
 			}
 
-			DebugLogger.instance.log("Exiting preferred neighbor thread...");
-			System.exit(0);
+			DebugLogger.instance.log("Exited preferred neighbor thread");
 		}
 	}
 
@@ -236,13 +239,16 @@ public class Server implements Runnable {
 
 			// Wait the interval
 			try {
+				DebugLogger.instance.log("Optimistic unchoke thread sleeping...");
 				TimeUnit.SECONDS.sleep(time);
+				DebugLogger.instance.log("Optimistic unchoke thread awake");
 			} catch (InterruptedException e) {
-				System.out.println(e);
+				e.printStackTrace();
+				DebugLogger.instance.err("Error sleeping: %s", e.getMessage());
 			}
 
 			while (PeerInfoList.instance.checkAllPeersHaveFile() == false) {
-				DebugLogger.instance.log("Determining optimistically unchoked neighbor");
+				DebugLogger.instance.log("Determining optimistically unchoked neighbor...");
 				// Every m seconds, pick 1 interested neighbor among choked at random that
 				// should be optimistically unchoked
 				// Get list of choked, yet interested neighbors
@@ -269,20 +275,22 @@ public class Server implements Runnable {
 				prev = randomPeer;
 				setUnchoked(randomPeer, true);
 
-				DebugLogger.instance.log("Finished determining optimistically unchoked neighbor");
+				DebugLogger.instance.log("Finished determining new optimistically unchoked neighbor");
 
 				FileLogger.instance.logChangeOptUnchokedNeighbor(prev);
 
 				// Wait the interval
 				try {
+					DebugLogger.instance.log("Optimistic unchoke thread sleeping...");
 					TimeUnit.SECONDS.sleep(time);
+					DebugLogger.instance.log("Optimistic unchoke thread awake");
 				} catch (InterruptedException e) {
-					System.out.println(e);
+					e.printStackTrace();
+					DebugLogger.instance.err("Error sleeping: %s", e.getMessage());
 				}
 			}
 
-			DebugLogger.instance.log("Exiting optimistically unchoked neighbor thread...");
-			System.exit(0);
+			DebugLogger.instance.log("Exited optimistic unchoke thread");
 		}
 	}
 
@@ -309,6 +317,7 @@ public class Server implements Runnable {
 		}
 
 		public void run() {
+			DebugLogger.instance.log("Handler #%d started", no);
 			try {
 				// initialize Input and Output streams
 				out = new ObjectOutputStream(connection.getOutputStream());
@@ -317,12 +326,15 @@ public class Server implements Runnable {
 
 				// Perform handshake
 				String peerID = msgHandler.receiveHandshakeServer(in);
+				DebugLogger.instance.log("Handshake message received from peer %s, verifying...", peerID);
 				this.connectedInfo = PeerInfoList.instance.getPeer(peerID);
 				if (this.connectedInfo != null) {
 					// Create an item in ConnectedClientsList
 					FileLogger.instance.logTCPConnectionFrom(peerID);
+					DebugLogger.instance.log("Handshake verified, sent handshake message to peer %s",
+							connectedInfo.peerID);
 					msgHandler.sendHandshake(out, hostInfo.peerID);
-					DebugLogger.instance.log("Handshake completed");
+					DebugLogger.instance.log("Handshake completed with peer %s", connectedInfo.peerID);
 
 					// Store the output stream
 					Server.insertOutputStream(connectedInfo.peerID, out);
@@ -330,7 +342,8 @@ public class Server implements Runnable {
 					while (PeerInfoList.instance.checkAllPeersHaveFile() == false) {
 						// Wait for message
 						Message received = msgHandler.receiveMessage(in);
-						DebugLogger.instance.log("Received %s message", received.type.toString());
+						DebugLogger.instance.log("Received %s message from peer %s", received.type.toString(),
+								connectedInfo.peerID);
 
 						// Handle the received message
 						switch (received.type) {
@@ -339,11 +352,9 @@ public class Server implements Runnable {
 								break;
 							case INTERESTED:
 								handleInterestedReceived(received);
-								FileLogger.instance.logInterestedMessage(connectedInfo.peerID);
 								break;
 							case NOT_INTERESTED:
 								handleNotInterestedReceived(received);
-								FileLogger.instance.logNotInterestedMessage(connectedInfo.peerID);
 								break;
 							case REQUEST:
 								handleRequestReceived(received);
@@ -356,32 +367,36 @@ public class Server implements Runnable {
 								break;
 						}
 					}
-					DebugLogger.instance.log("Server exiting...");
+					DebugLogger.instance.log("Handler for peer %s exiting...", connectedInfo.peerID);
 				} else {
-					DebugLogger.instance.err("Handshake failed");
+					DebugLogger.instance.err("Handshake failed for peer %s", peerID);
 				}
 			} catch (IOException ioException) {
-				DebugLogger.instance.err("Client %d disconnected", no);
+				DebugLogger.instance.err("Error starting handler #%d", no);
 			} finally {
 				// Close connections
 				try {
 					in.close();
 					out.close();
 					connection.close();
-					DebugLogger.instance.log("Successfully closed server");
+					DebugLogger.instance.log("Successfully closed handler for peer %s", connectedInfo.peerID);
 					System.exit(0);
 				} catch (IOException ioException) {
-					DebugLogger.instance.err("Client %d disconnected", no);
+					DebugLogger.instance.err("Error closing handler for peer %s", connectedInfo.peerID);
 				}
 			}
 		}
 
 		private void handleInterestedReceived(Message received) {
+			// Log
+			FileLogger.instance.logInterestedMessage(connectedInfo.peerID);
 			// Add the peer to the list of interested peers
 			Server.addInterested(connectedInfo.peerID);
 		}
 
 		private void handleNotInterestedReceived(Message received) {
+			// Log
+			FileLogger.instance.logNotInterestedMessage(connectedInfo.peerID);
 			// Remove the peer from the list of interested peers
 			Server.removeInterested(connectedInfo.peerID);
 		}
@@ -413,10 +428,10 @@ public class Server implements Runnable {
 			// bitfield - update the bitfield we think they have
 			// Update bitfield
 			HavePayload payload = (HavePayload) received.getPayload();
-			PeerInfoList.instance.setPeerBitfieldIndex(connectedInfo.peerID, payload.index);
-
 			// Log
 			FileLogger.instance.logHaveMessage(connectedInfo.peerID, payload.index);
+			// Update bitfield
+			PeerInfoList.instance.setPeerBitfieldIndex(connectedInfo.peerID, payload.index);
 		}
 	}
 }

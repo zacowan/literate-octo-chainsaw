@@ -18,11 +18,15 @@ public class peerProcess {
         try {
             peerID = args[0];
         } catch (Exception e) {
-            DebugLogger.instance.err("No peerID passed to peerProcess, %s", e.getMessage());
+            e.printStackTrace();
+            System.err.printf("No peerID passed to peerProcess, %s\n", e.getMessage());
+            System.exit(-1);
         }
 
         // Initialize debug logger
         DebugLogger.instance = new DebugLogger(peerID);
+
+        DebugLogger.instance.log("Initializing peerProcess for peer %s...", peerID);
 
         // Initialize logging to file
         FileLogger.instance = new FileLogger(peerID);
@@ -41,7 +45,9 @@ public class peerProcess {
                     .ceil(Double.parseDouble(CommonConfig.fileSize) / Double.parseDouble(CommonConfig.pieceSize));
             scanner.close();
         } catch (Exception e) {
+            e.printStackTrace();
             DebugLogger.instance.err("Error parsing %s file, %s", CC_FILENAME, e.getMessage());
+            System.exit(-1);
         }
 
         // read PeerInfo.cfg
@@ -62,7 +68,9 @@ public class peerProcess {
             }
             scanner.close();
         } catch (Exception e) {
+            e.printStackTrace();
             DebugLogger.instance.err("Error parsing %s file, %s", PI_FILENAME, e.getMessage());
+            System.exit(-1);
         }
 
         // Initialize piece storage
@@ -78,7 +86,9 @@ public class peerProcess {
             serverThread = new Thread(sv);
             serverThread.start();
         } catch (Exception e) {
+            e.printStackTrace();
             DebugLogger.instance.err("Failed to start the server thread, %s", e.getMessage());
+            System.exit(-1);
         }
 
         // spawn X clients
@@ -93,11 +103,17 @@ public class peerProcess {
                     clientThreads.add(th);
                     th.start();
                 } catch (Exception e) {
+                    e.printStackTrace();
                     DebugLogger.instance.err("Error creating client thread %d, %s", i, e.getMessage());
+                    System.exit(-1);
                 }
             } else {
                 break;
             }
         }
+
+        DebugLogger.instance.log("Finished initializing peerProcess for peer %s", peerID);
+
+        DebugLogger.instance.log("Exited peerProcess initialization thread");
     }
 }
