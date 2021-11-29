@@ -150,14 +150,40 @@ public class Client implements Runnable {
      * @param received the message received, containing a `have` payload.
      */
     private void handleHaveReceived(Message received) {
-        // peerid
-        // bitfield - update the bitfield we think they have
-        // Update bitfield
         HavePayload payload = (HavePayload) received.getPayload();
         // Log
         FileLogger.instance.logHaveMessage(targetInfo.peerID, payload.index);
         // Update bitfield
         PeerInfoList.instance.setPeerBitfieldIndex(targetInfo.peerID, payload.index);
+        // Check if we should send an interested message
+        List<Integer> interestedIndices = getInterestedIndices();
+        if (interestedIndices.size() == 0) {
+            // We are not interested
+            msgHandler.sendMessage(out, MessageType.NOT_INTERESTED, new EmptyPayload());
+        } else {
+            // We are interested
+            msgHandler.sendMessage(out, MessageType.INTERESTED, new EmptyPayload());
+        }
+    }
+
+    /**
+     * Returns a list of indices this peer is interested in.
+     *
+     * @return list of integers representing the indices.
+     */
+    private List<Integer> getInterestedIndices() {
+        BitSet targetBitfield = PeerInfoList.instance.getPeer(targetInfo.peerID).bitfield;
+        BitSet thisBitfield = PeerInfoList.instance.getPeer(hostInfo.peerID).bitfield;
+        // Find needed indices
+        List<Integer> interestedIndices = new ArrayList<>();
+        for (int i = 0; i < targetBitfield.size(); i++) {
+            boolean targetHas = targetBitfield.get(i);
+            boolean thisHas = thisBitfield.get(i);
+            if (targetHas && !thisHas) {
+                interestedIndices.add(i);
+            }
+        }
+        return interestedIndices;
     }
 
     /**
@@ -192,25 +218,15 @@ public class Client implements Runnable {
         RateTracker.instance.updateRate(targetInfo.peerID, payload.data.length);
         // Update bitfield
         PeerInfoList.instance.setPeerBitfieldIndex(hostInfo.peerID, payload.index);
-        // Send "have" message to connected peers
-        sendHaveToConnectedPeers(payload.index);
-        // Determine index of next request message
-        BitSet targetBitfield = PeerInfoList.instance.getPeer(targetInfo.peerID).bitfield;
-        BitSet thisBitfield = PeerInfoList.instance.getPeer(hostInfo.peerID).bitfield;
         // Log
+        BitSet thisBitfield = PeerInfoList.instance.getPeer(hostInfo.peerID).bitfield;
         FileLogger.instance.logDownloadPiece(targetInfo.peerID, payload.index, thisBitfield.cardinality());
         if (PeerInfoList.instance.getPeer(hostInfo.peerID).hasFile) {
+            DebugLogger.instance.log("This peer has downloaded the whole file");
             FileLogger.instance.logCompletionDownload();
         }
-        // Find needed indices
-        List<Integer> interestedIndices = new ArrayList<>();
-        for (int i = 0; i < targetBitfield.size(); i++) {
-            boolean targetHas = targetBitfield.get(i);
-            boolean thisHas = thisBitfield.get(i);
-            if (targetHas && !thisHas) {
-                interestedIndices.add(i);
-            }
-        }
+        // Determine next message to send
+        List<Integer> interestedIndices = getInterestedIndices();
         // unchoked but they have nothing we want
         if (interestedIndices.size() == 0) {
             // send not interested
@@ -222,45 +238,30 @@ public class Client implements Runnable {
             int randIndex = interestedIndices.get(new Random().nextInt(interestedIndices.size()));
             msgHandler.sendMessage(out, MessageType.REQUEST, new RequestPayload(randIndex));
         }
+        // Send "have" message to connected peers
+        sendHaveToConnectedPeers(payload.index);
     }
 
     // need to know which peer sent the message
-
     private void handleChokeReceived(Message received) {
         // Log
         FileLogger.instance.logChocking(targetInfo.peerID);
-        // Compare bitfields to determine if we are interested
-        // Send interested/not interested message
-        BitSet targetBitfield = PeerInfoList.instance.getPeer(targetInfo.peerID).bitfield;
-        BitSet thisBitfield = PeerInfoList.instance.getPeer(hostInfo.peerID).bitfield;
-
-        for (int i = 0; i < targetBitfield.size(); i++) {
-            if (targetBitfield.get(i) == true && thisBitfield.get(i) == false) {
-                msgHandler.sendMessage(out, MessageType.INTERESTED, new EmptyPayload());
-                return;
-            }
+        // Check if we are interested
+        List<Integer> interestedIndices = getInterestedIndices();
+        if (interestedIndices.size() == 0) {
+            // We are not interested
+            msgHandler.sendMessage(out, MessageType.NOT_INTERESTED, new EmptyPayload());
+        } else {
+            // We are interested
+            msgHandler.sendMessage(out, MessageType.INTERESTED, new EmptyPayload());
         }
-
-        // Send `not interested` message
-        msgHandler.sendMessage(out, MessageType.NOT_INTERESTED, new EmptyPayload());
-        PeerInfoList.instance.printThisBitfield();
     }
 
     private void handleUnchokeReceived(Message received) {
         // Log
         FileLogger.instance.logUnchoking(targetInfo.peerID);
-        // Compare stored bitfield of to ours to see what data to request
-        BitSet targetBitfield = PeerInfoList.instance.getPeer(targetInfo.peerID).bitfield;
-        BitSet thisBitfield = PeerInfoList.instance.getPeer(hostInfo.peerID).bitfield;
         // Find needed indices
-        List<Integer> interestedIndices = new ArrayList<>();
-        for (int i = 0; i < targetBitfield.size(); i++) {
-            boolean targetHas = targetBitfield.get(i);
-            boolean thisHas = thisBitfield.get(i);
-            if (targetHas && !thisHas) {
-                interestedIndices.add(i);
-            }
-        }
+        List<Integer> interestedIndices = getInterestedIndices();
         // unchoked but they have nothing we want
         if (interestedIndices.size() == 0) {
             // send not interested

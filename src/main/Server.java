@@ -102,12 +102,14 @@ public class Server implements Runnable {
 		 * @return list of peer IDs that are preferred.
 		 */
 		private List<String> determinePreferredRandomly(int k) {
-			List<String> currInterested = new ArrayList<>(interested);
+			List<String> currInterested = new ArrayList<>(getInterested());
 			ArrayList<String> preferredNeighbors = new ArrayList<String>();
 
 			Random numberGenerator = new Random();
 
-			for (int i = 0; i < Math.min(k, currInterested.size()); i++) {
+			int N = currInterested.size();
+
+			for (int i = 0; i < Math.min(k, N); i++) {
 				// Adding random index of currInterested into preferredNeighbors
 				int randNumber = numberGenerator.nextInt(currInterested.size());
 				preferredNeighbors.add(currInterested.get(randNumber));
@@ -130,7 +132,7 @@ public class Server implements Runnable {
 		 * @return list of peer IDs that are preferred.
 		 */
 		private List<String> determinePreferredNeighbors(int k) {
-			List<String> currInterested = new ArrayList<>(interested);
+			List<String> currInterested = new ArrayList<>(getInterested());
 			HashMap<String, Double> rates = new HashMap<>();
 			// Determine k neighbors that have fed data at the highest rate
 			for (String p : currInterested) {
