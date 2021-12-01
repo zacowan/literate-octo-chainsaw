@@ -4,6 +4,10 @@ import java.net.*;
 import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 import main.logging.*;
@@ -78,18 +82,18 @@ public class PieceStorage {
                 // Read pieceSize / 2 characters, pieceNum times
                 for (int i = 0; i < numPieces; i++) {
                     try {
+                        DebugLogger.instance.log("Writing out piece #%d", i);
                         if (i != numPieces - 1) {
                             byte[] piece = new byte[pieceSize];
-
                             in.read(piece, 0, pieceSize);
-                            setPiece(i, piece);
+                            downloaded.put(i, piece);
                         } else {
                             // Array size should be smaller
                             int fileSize = Integer.parseInt(CommonConfig.fileSize);
                             int lastPieceSize = fileSize % pieceSize;
                             byte[] lastPiece = new byte[lastPieceSize];
                             in.read(lastPiece, 0, lastPieceSize);
-                            setPiece(i, lastPiece);
+                            downloaded.put(i, lastPiece);
                         }
 
                     } catch (IOException e) {
@@ -97,6 +101,8 @@ public class PieceStorage {
                     }
                 }
                 in.close();
+                // TODO: copy file with Files package, or some other package
+                // TODO: make sure tree.jpg gets copied correctly
             } catch (FileNotFoundException e) {
                 DebugLogger.instance.err("Error reading file, %s", e.getMessage());
             } catch (IOException e) {
