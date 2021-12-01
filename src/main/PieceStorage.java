@@ -22,6 +22,8 @@ public class PieceStorage {
      * Writes out any piece data we have to the file, in order.
      */
     private void writeCurrentPiecesToFile() {
+        // TODO: change this function to be able to write raw bytes to the file,
+        // TODO: instead of converting it to a string.
         // Open a filewriter to fileDirectoryName
         try {
             FileWriter writer = new FileWriter(fileLocation);
