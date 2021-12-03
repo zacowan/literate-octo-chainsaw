@@ -1,4 +1,5 @@
 ./src/main/Client.java
+./src/main/MessageHandlerList.java
 ./src/main/PeerInfoList.java
 ./src/main/PieceStorage.java
 ./src/main/Utils.java

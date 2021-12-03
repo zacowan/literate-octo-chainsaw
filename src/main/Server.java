@@ -27,26 +27,6 @@ public class Server implements Runnable {
 		interested.removeIf(p -> p.equals(peerID));
 	}
 
-	/**
-	 * Mapping of peerID -> ObjectOutputStream.
-	 */
-	private static HashMap<String, ObjectOutputStream> outputStreams = new HashMap<>();
-
-	/**
-	 * @param peerID the peerID associated with the output stream.
-	 * @param out    the output stream associated with the target peer.
-	 */
-	public static synchronized void insertOutputStream(String peerID, ObjectOutputStream out) {
-		outputStreams.put(peerID, out);
-	}
-
-	/**
-	 * @return a hash map of peerID -> ObjectOutputStream.
-	 */
-	public static synchronized HashMap<String, ObjectOutputStream> getOutputStreams() {
-		return outputStreams;
-	}
-
 	private static HashMap<String, Boolean> unchoked = new HashMap<>();
 
 	public static synchronized Boolean isUnchoked(String peerID) {
@@ -85,8 +65,8 @@ public class Server implements Runnable {
 			DebugLogger.instance.err("Error spawning client handler threads: %s", e.getMessage());
 		}
 		// Spawn the threads for choosing neighbors to send data to
-		new Thread(new HandlePreferredNeighbors()).run();
-		new Thread(new HandleOptimisticUnchoke()).run();
+		new Thread(new HandlePreferredNeighbors()).start();
+		new Thread(new HandleOptimisticUnchoke()).start();
 	}
 
 	// Handles choosing preferred neighbors
@@ -148,7 +128,6 @@ public class Server implements Runnable {
 		}
 
 		public void run() {
-			MessageHandler msgHandler = new MessageHandler();
 			long time = Long.parseLong(CommonConfig.unchokingInterval);
 			int k = Integer.parseInt(CommonConfig.numberOfPreferredNeighbors);
 
@@ -194,12 +173,12 @@ public class Server implements Runnable {
 
 				// Send choke to toChoke
 				for (String p : toChoke) {
-					msgHandler.sendMessage(Server.getOutputStreams().get(p), MessageType.CHOKE, new EmptyPayload());
+					MessageHandlerList.instance.sendMessage(p, MessageType.CHOKE, new EmptyPayload());
 				}
 
 				// Send unchoke message to every peer that needs to be unchoked
 				for (int i = 0; i < toUnchoke.size(); i++) {
-					msgHandler.sendMessage(Server.getOutputStreams().get(toUnchoke.get(i)), MessageType.UNCHOKE,
+					MessageHandlerList.instance.sendMessage(toUnchoke.get(i), MessageType.UNCHOKE,
 							new EmptyPayload());
 				}
 
@@ -236,7 +215,6 @@ public class Server implements Runnable {
 		private String prev = null;
 
 		public void run() {
-			MessageHandler msgHandler = new MessageHandler();
 			long time = Long.parseLong(CommonConfig.optimisticUnchokingInterval);
 
 			// Wait the interval
@@ -264,12 +242,11 @@ public class Server implements Runnable {
 				String randomPeer = choked.get(randIndex);
 
 				// Send unchoke to that neighbor
-				msgHandler.sendMessage(Server.getOutputStreams().get(randomPeer), MessageType.UNCHOKE,
-						new EmptyPayload());
+				MessageHandlerList.instance.sendMessage(randomPeer, MessageType.UNCHOKE, new EmptyPayload());
 
 				// Send choke to previous optimistically unchoked neighbor
 				if (prev != null) {
-					msgHandler.sendMessage(Server.getOutputStreams().get(prev), MessageType.CHOKE, new EmptyPayload());
+					MessageHandlerList.instance.sendMessage(prev, MessageType.CHOKE, new EmptyPayload());
 				}
 
 				// Update state variables
@@ -301,9 +278,6 @@ public class Server implements Runnable {
 	 * responsible for dealing with a single client's requests.
 	 */
 	private static class Handler extends Thread {
-		private Socket connection;
-		private ObjectInputStream in; // stream read from the socket
-		private ObjectOutputStream out; // stream write to the socket
 		private int no; // The index number of the client
 
 		private PeerInfo hostInfo;
@@ -312,22 +286,16 @@ public class Server implements Runnable {
 		private MessageHandler msgHandler;
 
 		public Handler(Socket connection, int no, PeerInfo hostInfo) {
-			this.connection = connection;
 			this.no = no;
 			this.hostInfo = hostInfo;
-			this.msgHandler = new MessageHandler();
+			this.msgHandler = new MessageHandler(connection);
 		}
 
 		public void run() {
 			DebugLogger.instance.log("Handler #%d started", no);
 			try {
-				// initialize Input and Output streams
-				out = new ObjectOutputStream(connection.getOutputStream());
-				out.flush();
-				in = new ObjectInputStream(connection.getInputStream());
-
 				// Perform handshake
-				String peerID = msgHandler.receiveHandshakeServer(in);
+				String peerID = msgHandler.receiveHandshakeServer();
 				DebugLogger.instance.log("Handshake message received from peer %s, verifying...", peerID);
 				this.connectedInfo = PeerInfoList.instance.getPeer(peerID);
 				if (this.connectedInfo != null) {
@@ -335,15 +303,15 @@ public class Server implements Runnable {
 					FileLogger.instance.logTCPConnectionFrom(peerID);
 					DebugLogger.instance.log("Handshake verified, sent handshake message to peer %s",
 							connectedInfo.peerID);
-					msgHandler.sendHandshake(out, hostInfo.peerID);
+					msgHandler.sendHandshake(hostInfo.peerID);
 					DebugLogger.instance.log("Handshake completed with peer %s", connectedInfo.peerID);
 
 					// Store the output stream
-					Server.insertOutputStream(connectedInfo.peerID, out);
+					MessageHandlerList.instance.insertMessageHandler(connectedInfo.peerID, msgHandler);
 
 					while (PeerInfoList.instance.checkAllPeersHaveFile() == false) {
 						// Wait for message
-						Message received = msgHandler.receiveMessage(in);
+						Message received = msgHandler.receiveMessage();
 						DebugLogger.instance.log("Received %s message from peer %s", received.type.toString(),
 								connectedInfo.peerID);
 
@@ -373,19 +341,13 @@ public class Server implements Runnable {
 				} else {
 					DebugLogger.instance.err("Handshake failed for peer %s", peerID);
 				}
-			} catch (IOException ioException) {
-				DebugLogger.instance.err("Error starting handler #%d", no);
+			} catch (Exception e) {
+				e.printStackTrace();
 			} finally {
 				// Close connections
-				try {
-					in.close();
-					out.close();
-					connection.close();
-					DebugLogger.instance.log("Successfully closed handler for peer %s", connectedInfo.peerID);
-					System.exit(0);
-				} catch (IOException ioException) {
-					DebugLogger.instance.err("Error closing handler for peer %s", connectedInfo.peerID);
-				}
+				// TODO: close connections?
+				DebugLogger.instance.log("Successfully closed handler for peer %s", connectedInfo.peerID);
+				System.exit(0);
 			}
 		}
 
@@ -410,13 +372,15 @@ public class Server implements Runnable {
 					payload.bitfield);
 			// Send bitfield message
 			BitSet thisBitfield = PeerInfoList.instance.getPeer(hostInfo.peerID).bitfield;
-			msgHandler.sendMessage(out, MessageType.BITFIELD, new BitfieldPayload(thisBitfield));
+			MessageHandlerList.instance.sendMessage(connectedInfo.peerID, MessageType.BITFIELD,
+					new BitfieldPayload(thisBitfield));
 		}
 
 		private void handleRequestReceived(Message received) {
 			RequestPayload payload = (RequestPayload) received.getPayload();
 			byte[] piece = PieceStorage.instance.getPiece(payload.index);
-			msgHandler.sendMessage(out, MessageType.PIECE, new PiecePayload(payload.index, piece));
+			MessageHandlerList.instance.sendMessage(connectedInfo.peerID, MessageType.PIECE,
+					new PiecePayload(payload.index, piece));
 		}
 
 		/**

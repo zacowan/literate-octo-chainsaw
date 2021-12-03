@@ -10,7 +10,30 @@ import main.logging.*;
 import main.messaging.payloads.Payload;
 
 public class MessageHandler {
-    public String receiveHandshakeServer(ObjectInputStream in) {
+    ObjectOutputStream out;
+    ObjectInputStream in;
+    Socket socket;
+
+    public MessageHandler(Socket socket) {
+        this.socket = socket;
+        try {
+            // initialize inputStream and outputStream
+            out = new ObjectOutputStream(socket.getOutputStream());
+            out.flush();
+            in = new ObjectInputStream(socket.getInputStream());
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+            DebugLogger.instance.err("Trying to connect to unknown host.");
+        } catch (ConnectException e) {
+            e.printStackTrace();
+            DebugLogger.instance.err("Connection failed, initialize the server first.");
+        } catch (IOException e) {
+            e.printStackTrace();
+            DebugLogger.instance.err("IO Exception");
+        }
+    }
+
+    public String receiveHandshakeServer() {
         try {
             byte[] bytes = (byte[]) in.readObject();
             HandshakeMessage received = new HandshakeMessage(bytes);
@@ -29,7 +52,7 @@ public class MessageHandler {
         return null;
     }
 
-    public boolean receiveHandshakeClient(ObjectInputStream in, String peerID) {
+    public boolean receiveHandshakeClient(String peerID) {
         try {
             byte[] bytes = (byte[]) in.readObject();
             HandshakeMessage received = new HandshakeMessage(bytes);
@@ -49,7 +72,7 @@ public class MessageHandler {
         return false;
     }
 
-    public void sendHandshake(ObjectOutputStream out, String peerID) {
+    public void sendHandshake(String peerID) {
         HandshakeMessage msg = new HandshakeMessage(peerID);
         try {
             out.writeObject(msg.getBytes());
@@ -59,7 +82,7 @@ public class MessageHandler {
         }
     }
 
-    public void sendMessage(ObjectOutputStream out, MessageType type, Payload payload) {
+    public void sendMessage(MessageType type, Payload payload) {
         Message msg = new Message(type, payload);
         try {
             out.writeObject(msg.getBytes());
@@ -69,7 +92,7 @@ public class MessageHandler {
         }
     }
 
-    public Message receiveMessage(ObjectInputStream in) {
+    public Message receiveMessage() {
         try {
             byte[] bytes = (byte[]) in.readObject();
             return new Message(bytes);

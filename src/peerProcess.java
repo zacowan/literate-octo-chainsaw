@@ -79,6 +79,9 @@ public class peerProcess {
         // Initialize rate tracker
         RateTracker.instance = new RateTracker(PeerInfoList.instance.getList());
 
+        // Initialize message handler list
+        MessageHandlerList.instance = new MessageHandlerList();
+
         // spawn server
         Thread serverThread;
         try {
