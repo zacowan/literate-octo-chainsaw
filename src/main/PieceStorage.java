@@ -23,6 +23,7 @@ public class PieceStorage {
      * Writes out any piece data we have to the file, in order.
      */
     private void writeCurrentPiecesToFile() {
+        truncateFile();
         for (byte[] bytes : downloaded.values()) {
             try {
                 Files.write(filePath, bytes, StandardOpenOption.APPEND);
@@ -31,6 +32,17 @@ public class PieceStorage {
                 DebugLogger.instance.err("Error writing piece to file.");
             }
 
+        }
+    }
+
+    private void truncateFile() {
+        try {
+            FileWriter writer = new FileWriter(fileLocation);
+            writer.write("");
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            DebugLogger.instance.err("Error truncating file.");
         }
     }
 
@@ -50,14 +62,7 @@ public class PieceStorage {
 
         // Initialize the file
         new File(directoryName).mkdirs();
-        try {
-            FileWriter writer = new FileWriter(fileLocation);
-            writer.write("");
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-            DebugLogger.instance.err("Error initializing file.");
-        }
+        truncateFile();
 
         int numPieces = (int) Math
                 .ceil(Double.parseDouble(CommonConfig.fileSize) / Double.parseDouble(CommonConfig.pieceSize));
