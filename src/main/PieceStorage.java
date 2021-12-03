@@ -4,10 +4,10 @@ import java.net.*;
 import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
-import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 
 import main.logging.*;
@@ -17,31 +17,20 @@ public class PieceStorage {
 
     private HashMap<Integer, byte[]> downloaded;
     private String fileLocation;
+    private Path filePath;
 
     /**
      * Writes out any piece data we have to the file, in order.
      */
     private void writeCurrentPiecesToFile() {
-        // TODO: change this function to be able to write raw bytes to the file,
-        // TODO: instead of converting it to a string.
-        // Open a filewriter to fileDirectoryName
-        try {
-            FileWriter writer = new FileWriter(fileLocation);
-
-            // Write any data we have into the file
-            for (byte[] data : downloaded.values()) {
-                if (data.length > 0) {
-
-                    String s = new String(data);
-                    writer.write(s);
-                }
+        for (byte[] bytes : downloaded.values()) {
+            try {
+                Files.write(filePath, bytes, StandardOpenOption.APPEND);
+            } catch (IOException e) {
+                e.printStackTrace();
+                DebugLogger.instance.err("Error writing piece to file.");
             }
 
-            // Close the filewriter
-            writer.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-            DebugLogger.instance.err("Error writing to file, %s", e.getMessage());
         }
     }
 
@@ -57,6 +46,7 @@ public class PieceStorage {
     public PieceStorage(boolean hasFile) {
         String directoryName = "peer_" + PeerInfoList.instance.getThisPeer().peerID;
         this.fileLocation = directoryName + "/" + CommonConfig.fileName;
+        this.filePath = Paths.get(this.fileLocation);
 
         // Initialize the file
         new File(directoryName).mkdirs();
@@ -65,7 +55,8 @@ public class PieceStorage {
             writer.write("");
             writer.close();
         } catch (IOException e) {
-            DebugLogger.instance.err(e.getMessage());
+            e.printStackTrace();
+            DebugLogger.instance.err("Error initializing file.");
         }
 
         int numPieces = (int) Math
@@ -103,8 +94,7 @@ public class PieceStorage {
                     }
                 }
                 in.close();
-                // TODO: copy file with Files package, or some other package
-                // TODO: make sure tree.jpg gets copied correctly
+                writeCurrentPiecesToFile();
             } catch (FileNotFoundException e) {
                 DebugLogger.instance.err("Error reading file, %s", e.getMessage());
             } catch (IOException e) {

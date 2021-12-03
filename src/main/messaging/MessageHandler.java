@@ -78,6 +78,7 @@ public class MessageHandler {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
             DebugLogger.instance.err(e.getMessage());
+            e.printStackTrace();
         }
         return null;
     }
