@@ -311,7 +311,7 @@ public class Server implements Runnable {
 
 					while (PeerInfoList.instance.checkAllPeersHaveFile() == false) {
 						// Wait for message
-						Message received = msgHandler.receiveMessage();
+						Message received = MessageHandlerList.instance.receiveMessage(connectedInfo.peerID);
 						DebugLogger.instance.log("Received %s message from peer %s", received.type.toString(),
 								connectedInfo.peerID);
 
