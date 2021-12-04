@@ -68,7 +68,7 @@ public class Client implements Runnable {
                 FileLogger.instance.logTCPConnectionTo(targetInfo.peerID);
 
                 // Store the output stream
-                Server.insertOutputStream(targetInfo.peerID, out);
+                insertOutputStream(targetInfo.peerID, out);
 
                 // Send bitfield message
                 DebugLogger.instance.log("Sent bitfield message to peer %s", targetInfo.peerID);
