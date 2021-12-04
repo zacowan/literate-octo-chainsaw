@@ -88,7 +88,7 @@ public class Server implements Runnable {
 		}
 		// Spawn the threads for choosing neighbors to send data to
 		new Thread(new HandlePreferredNeighbors()).start();
-		// new Thread(new HandleOptimisticUnchoke()).start();
+		new Thread(new HandleOptimisticUnchoke()).start();
 	}
 
 	// Handles choosing preferred neighbors
@@ -260,26 +260,33 @@ public class Server implements Runnable {
 						choked.add(p);
 					}
 				}
-				int randIndex = new Random().nextInt(choked.size());
-				String randomPeer = choked.get(randIndex);
 
-				// Send unchoke to that neighbor
-				msgHandler.sendMessage(Server.getOutputStreams().get(randomPeer), MessageType.UNCHOKE,
-						new EmptyPayload());
+				if (choked.size() > 0) {
+					// TODO: maybe check if optimistically unchoked has changed to preferred?
+					int randIndex = new Random().nextInt(choked.size());
+					String randomPeer = choked.get(randIndex);
 
-				// Send choke to previous optimistically unchoked neighbor
-				if (prev != null) {
-					msgHandler.sendMessage(Server.getOutputStreams().get(prev), MessageType.CHOKE, new EmptyPayload());
+					// Send unchoke to that neighbor
+					msgHandler.sendMessage(Server.getOutputStreams().get(randomPeer), MessageType.UNCHOKE,
+							new EmptyPayload());
+
+					// Send choke to previous optimistically unchoked neighbor
+					if (prev != null) {
+						msgHandler.sendMessage(Server.getOutputStreams().get(prev), MessageType.CHOKE,
+								new EmptyPayload());
+					}
+
+					// Update state variables
+					setUnchoked(prev, false);
+					prev = randomPeer;
+					setUnchoked(randomPeer, true);
+
+					DebugLogger.instance.log("Finished determining new optimistically unchoked neighbor");
+
+					FileLogger.instance.logChangeOptUnchokedNeighbor(prev);
+				} else {
+					DebugLogger.instance.log("There are no neighbors that need to be unchoked.");
 				}
-
-				// Update state variables
-				setUnchoked(prev, false);
-				prev = randomPeer;
-				setUnchoked(randomPeer, true);
-
-				DebugLogger.instance.log("Finished determining new optimistically unchoked neighbor");
-
-				FileLogger.instance.logChangeOptUnchokedNeighbor(prev);
 
 				// Wait the interval
 				try {

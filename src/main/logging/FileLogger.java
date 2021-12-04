@@ -94,7 +94,7 @@ public class FileLogger {
 
     // sahir
     public synchronized void logChangeOptUnchokedNeighbor(String peerID) {
-        String log = getTimestamp() + getPeerString(hostID) + " has  the  optimistically  unchoked  neighbor "
+        String log = getTimestamp() + getPeerString(hostID) + " has the optimistically unchoked neighbor "
                 + getPeerString(peerID);
         writeLogToFile(log);
     }
