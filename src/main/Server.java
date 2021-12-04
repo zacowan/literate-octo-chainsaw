@@ -254,8 +254,9 @@ public class Server implements Runnable {
 				// Every m seconds, pick 1 interested neighbor among choked at random that
 				// should be optimistically unchoked
 				// Get list of choked, yet interested neighbors
+				List<String> currInterested = new ArrayList<>(getInterested());
 				List<String> choked = new ArrayList<>();
-				for (String p : interested) {
+				for (String p : currInterested) {
 					if (!isUnchoked(p)) {
 						choked.add(p);
 					}
