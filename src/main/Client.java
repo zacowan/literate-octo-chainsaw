@@ -11,6 +11,8 @@ import main.messaging.*;
 import main.messaging.payloads.*;
 
 public class Client implements Runnable {
+    public static MessageHandler msgHandler = new MessageHandler();
+
     /**
      * Mapping of peerID -> ObjectOutputStream.
      */
@@ -38,12 +40,9 @@ public class Client implements Runnable {
     PeerInfo hostInfo;
     PeerInfo targetInfo;
 
-    MessageHandler msgHandler;
-
     public Client(PeerInfo hostInfo, PeerInfo targetInfo) {
         this.hostInfo = hostInfo;
         this.targetInfo = targetInfo;
-        this.msgHandler = new MessageHandler();
     }
 
     public void run() {
@@ -201,7 +200,7 @@ public class Client implements Runnable {
             ObjectOutputStream outputStream = set.getValue();
             // whats in serverOutputStream isn't in client outputstream
             if (!clientOutputStreams.containsKey(peerID)) {
-                msgHandler.sendMessage(outputStream, MessageType.HAVE, new HavePayload(index));
+                Server.msgHandler.sendMessage(outputStream, MessageType.HAVE, new HavePayload(index));
             }
         }
 

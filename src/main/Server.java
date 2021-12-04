@@ -13,6 +13,8 @@ import main.messaging.payloads.*;
 
 public class Server implements Runnable {
 
+	public static MessageHandler msgHandler = new MessageHandler();
+
 	private static List<String> interested = new ArrayList<>();
 
 	public static synchronized List<String> getInterested() {
@@ -85,8 +87,8 @@ public class Server implements Runnable {
 			DebugLogger.instance.err("Error spawning client handler threads: %s", e.getMessage());
 		}
 		// Spawn the threads for choosing neighbors to send data to
-		new Thread(new HandlePreferredNeighbors()).run();
-		new Thread(new HandleOptimisticUnchoke()).run();
+		new Thread(new HandlePreferredNeighbors()).start();
+		// new Thread(new HandleOptimisticUnchoke()).start();
 	}
 
 	// Handles choosing preferred neighbors
@@ -148,7 +150,6 @@ public class Server implements Runnable {
 		}
 
 		public void run() {
-			MessageHandler msgHandler = new MessageHandler();
 			long time = Long.parseLong(CommonConfig.unchokingInterval);
 			int k = Integer.parseInt(CommonConfig.numberOfPreferredNeighbors);
 
@@ -236,7 +237,6 @@ public class Server implements Runnable {
 		private String prev = null;
 
 		public void run() {
-			MessageHandler msgHandler = new MessageHandler();
 			long time = Long.parseLong(CommonConfig.optimisticUnchokingInterval);
 
 			// Wait the interval
@@ -309,13 +309,10 @@ public class Server implements Runnable {
 		private PeerInfo hostInfo;
 		private PeerInfo connectedInfo;
 
-		private MessageHandler msgHandler;
-
 		public Handler(Socket connection, int no, PeerInfo hostInfo) {
 			this.connection = connection;
 			this.no = no;
 			this.hostInfo = hostInfo;
-			this.msgHandler = new MessageHandler();
 		}
 
 		public void run() {

@@ -59,7 +59,7 @@ public class MessageHandler {
         }
     }
 
-    public void sendMessage(ObjectOutputStream out, MessageType type, Payload payload) {
+    public synchronized void sendMessage(ObjectOutputStream out, MessageType type, Payload payload) {
         Message msg = new Message(type, payload);
         try {
             out.writeObject(msg.getBytes());
