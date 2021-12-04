@@ -12,11 +12,15 @@ Diagram: https://drive.google.com/file/d/170t8bSQvOByvuJmGKxeqEdJOYjQb3RMS/view?
 4. Run the first peer with `java peerProcess PEER_ID1`.
 5. In a separate terminal, `java peerProcess PEER_ID2`.
 
-### Using `run_dev.sh`
+### How to Run Remote Peers
 
-1. Make sure you have GNU's `parallel` installed.
-2. Give the script the proper permissions with `chmod +x run_dev.sh`.
-3. Run the script with `sh run_dev.sh`.
+1. Make sure that all of the compiled java code, config files, and file to transfer are on all of the linux servers.
+2. Compile the "StartRemotePeers.java" by running `javac src/StartRemotePeers.java -cp libraries/jsch-0.1.54.jar` in the root directory.
+3. Run the command `java -cp .:../libraries/jsch-0.1.54.jar StartRemotePeers` inside of the `src/` directory.
+
+#### Other
+
+- `scp -r ~/Development/literate-octo-chainsaw/_build_/* zcowan@lin114-01.cise.ufl.edu:/cise/homes/zcowan/`
 
 ### Zipping for Midpoint Submission
 
