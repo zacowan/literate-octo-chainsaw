@@ -64,8 +64,9 @@ public class MessageHandler {
         try {
             out.writeObject(msg.getBytes());
             out.flush();
-        } catch (Exception e) {
-            DebugLogger.instance.err(e.getMessage());
+        } catch (IOException e) {
+            e.printStackTrace();
+            DebugLogger.instance.err("IOException: %s", e.getMessage());
         }
     }
 
@@ -74,11 +75,11 @@ public class MessageHandler {
             byte[] bytes = (byte[]) in.readObject();
             return new Message(bytes);
         } catch (IOException e) {
-            DebugLogger.instance.err(e.getMessage());
             e.printStackTrace();
+            DebugLogger.instance.err("IOException: %s", e.getMessage());
         } catch (ClassNotFoundException e) {
-            DebugLogger.instance.err(e.getMessage());
             e.printStackTrace();
+            DebugLogger.instance.err("ClassNotFoundException: %s", e.getMessage());
         }
         return null;
     }
