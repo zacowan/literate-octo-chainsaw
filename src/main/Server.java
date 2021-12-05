@@ -200,7 +200,7 @@ public class Server implements Runnable {
 				// Remove preferred neighbors that are no longe preferred
 				List<String> toChoke = new ArrayList<>();
 				for (Map.Entry<String, Boolean> set : unchoked.entrySet()) {
-					if (set.getValue() && !newPreferred.contains(set.getKey())) {
+					if (set.getValue() && !newPreferred.contains(set.getKey()) && set.getKey() != currOptimistic) {
 						toChoke.add(set.getKey());
 					}
 				}
