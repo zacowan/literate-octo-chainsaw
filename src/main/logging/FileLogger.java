@@ -79,6 +79,11 @@ public class FileLogger {
         writeLogToFile(log);
     }
 
+    public synchronized void logDebug(String msg) {
+        String log = getTimestamp() + " DEBUG: " + msg;
+        writeLogToFile(log);
+    }
+
     // Zach
     public synchronized void logChangePreferredNeighbors(List<String> preferredNeighbors) {
         String log = getTimestamp() + getPeerString(hostID) + " has the preferred neighbors [";

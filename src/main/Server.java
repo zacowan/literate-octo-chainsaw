@@ -22,7 +22,9 @@ public class Server implements Runnable {
 	}
 
 	public static synchronized void addInterested(String peerID) {
-		interested.add(peerID);
+		if (interested.indexOf(peerID) == -1) {
+			interested.add(peerID);
+		}
 	}
 
 	public static synchronized void removeInterested(String peerID) {
