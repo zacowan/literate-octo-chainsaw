@@ -18,6 +18,7 @@ public class PieceStorage {
     private HashMap<Integer, byte[]> downloaded;
     private String fileLocation;
     private Path filePath;
+    private boolean wroteFile = false;
 
     /**
      * Writes out any piece data we have to the file, in order.
@@ -52,7 +53,16 @@ public class PieceStorage {
 
     public synchronized void setPiece(int index, byte[] data) {
         downloaded.put(index, data);
-        writeCurrentPiecesToFile();
+        // if (downloaded.size() == CommonConfig.numPieces) {
+        // writeCurrentPiecesToFile();
+        // }
+    }
+
+    public synchronized void writeAllPiecesToFile() {
+        if (!wroteFile && downloaded.size() == CommonConfig.numPieces) {
+            writeCurrentPiecesToFile();
+            wroteFile = true;
+        }
     }
 
     public PieceStorage(boolean hasFile) {

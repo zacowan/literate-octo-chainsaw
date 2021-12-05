@@ -5,6 +5,7 @@ import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import main.logging.*;
 import main.messaging.*;
@@ -43,6 +44,7 @@ public class Client implements Runnable {
     public Client(PeerInfo hostInfo, PeerInfo targetInfo) {
         this.hostInfo = hostInfo;
         this.targetInfo = targetInfo;
+        ThreadManagement.instance.insertClientThread(targetInfo.peerID);
     }
 
     public void run() {
@@ -105,6 +107,19 @@ public class Client implements Runnable {
                 }
                 // All peers have the file, exit
                 DebugLogger.instance.log("Client exiting...");
+                // Say that this thread is ready to exit
+                ThreadManagement.instance.setClientThreadReady(targetInfo.peerID);
+                while (true) {
+                    try {
+                        if (!ThreadManagement.instance.checkIfSafeToExit()) {
+                            TimeUnit.SECONDS.sleep(1);
+                        } else {
+                            break;
+                        }
+                    } catch (InterruptedException e) {
+                        DebugLogger.instance.err("Interrupted");
+                    }
+                }
             } else {
                 DebugLogger.instance.err("Handshake invalid");
             }
@@ -121,7 +136,8 @@ public class Client implements Runnable {
                 out.close();
                 requestSocket.close();
                 DebugLogger.instance.log("Successfully closed client connected to peer %s", targetInfo.peerID);
-                System.exit(0);
+                PieceStorage.instance.writeAllPiecesToFile();
+                // System.exit(0);
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             }

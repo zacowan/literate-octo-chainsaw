@@ -335,6 +335,7 @@ public class Server implements Runnable {
 				String peerID = msgHandler.receiveHandshakeServer(in);
 				DebugLogger.instance.log("Handshake message received from peer %s, verifying...", peerID);
 				this.connectedInfo = PeerInfoList.instance.getPeer(peerID);
+				ThreadManagement.instance.insertServerThread(connectedInfo.peerID);
 				if (this.connectedInfo != null) {
 					// Create an item in ConnectedClientsList
 					FileLogger.instance.logTCPConnectionFrom(peerID);
@@ -375,6 +376,19 @@ public class Server implements Runnable {
 						}
 					}
 					DebugLogger.instance.log("Handler for peer %s exiting...", connectedInfo.peerID);
+					// Say that this thread is ready to exit
+					ThreadManagement.instance.setServerThreadReady(connectedInfo.peerID);
+					while (true) {
+						try {
+							if (!ThreadManagement.instance.checkIfSafeToExit()) {
+								TimeUnit.SECONDS.sleep(1);
+							} else {
+								break;
+							}
+						} catch (InterruptedException e) {
+							DebugLogger.instance.err("Interrupted");
+						}
+					}
 				} else {
 					DebugLogger.instance.err("Handshake failed for peer %s", peerID);
 				}
@@ -387,7 +401,8 @@ public class Server implements Runnable {
 					out.close();
 					connection.close();
 					DebugLogger.instance.log("Successfully closed handler for peer %s", connectedInfo.peerID);
-					System.exit(0);
+					PieceStorage.instance.writeAllPiecesToFile();
+					// System.exit(0);
 				} catch (IOException ioException) {
 					DebugLogger.instance.err("Error closing handler for peer %s", connectedInfo.peerID);
 				}
