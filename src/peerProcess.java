@@ -79,9 +79,6 @@ public class peerProcess {
         // Initialize rate tracker
         RateTracker.instance = new RateTracker(PeerInfoList.instance.getList());
 
-        // Initialize thread management
-        ThreadManagement.instance = new ThreadManagement();
-
         // spawn server
         Thread serverThread;
         try {

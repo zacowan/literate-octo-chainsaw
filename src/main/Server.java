@@ -348,7 +348,6 @@ public class Server implements Runnable {
 				String peerID = msgHandler.receiveHandshakeServer(in);
 				DebugLogger.instance.log("Handshake message received from peer %s, verifying...", peerID);
 				this.connectedInfo = PeerInfoList.instance.getPeer(peerID);
-				ThreadManagement.instance.insertServerThread(connectedInfo.peerID);
 				if (this.connectedInfo != null) {
 					// Create an item in ConnectedClientsList
 					FileLogger.instance.logTCPConnectionFrom(peerID);

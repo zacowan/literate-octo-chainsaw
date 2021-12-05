@@ -44,7 +44,6 @@ public class Client implements Runnable {
     public Client(PeerInfo hostInfo, PeerInfo targetInfo) {
         this.hostInfo = hostInfo;
         this.targetInfo = targetInfo;
-        ThreadManagement.instance.insertClientThread(targetInfo.peerID);
     }
 
     public void run() {

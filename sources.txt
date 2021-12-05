@@ -19,4 +19,3 @@
 ./src/main/logging/DebugLogger.java
 ./src/main/logging/FileLogger.java
 ./src/peerProcess.java
-./src/main/ThreadManagement.java
