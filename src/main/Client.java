@@ -80,6 +80,12 @@ public class Client implements Runnable {
                 while (PeerInfoList.instance.checkAllPeersHaveFile() == false) {
                     // Wait for message
                     Message received = msgHandler.receiveMessage(in);
+
+                    // Handle null message
+                    if (received == null) {
+                        break;
+                    }
+
                     DebugLogger.instance.log("Received %s message from peer %s", received.type.toString(),
                             targetInfo.peerID);
 
@@ -108,18 +114,7 @@ public class Client implements Runnable {
                 // All peers have the file, exit
                 DebugLogger.instance.log("Client exiting...");
                 // Say that this thread is ready to exit
-                ThreadManagement.instance.setClientThreadReady(targetInfo.peerID);
-                while (true) {
-                    try {
-                        if (!ThreadManagement.instance.checkIfSafeToExit()) {
-                            TimeUnit.SECONDS.sleep(1);
-                        } else {
-                            break;
-                        }
-                    } catch (InterruptedException e) {
-                        DebugLogger.instance.err("Interrupted");
-                    }
-                }
+                PieceStorage.instance.writeAllPiecesToFile();
             } else {
                 DebugLogger.instance.err("Handshake invalid");
             }
@@ -136,10 +131,10 @@ public class Client implements Runnable {
                 out.close();
                 requestSocket.close();
                 DebugLogger.instance.log("Successfully closed client connected to peer %s", targetInfo.peerID);
-                PieceStorage.instance.writeAllPiecesToFile();
-                // System.exit(0);
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
+                System.exit(0);
+            } catch (Exception e) {
+                DebugLogger.instance.log("Error closing client connected to peer %s", targetInfo.peerID);
+                System.exit(0);
             }
         }
     }

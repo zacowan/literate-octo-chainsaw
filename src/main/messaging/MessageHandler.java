@@ -64,6 +64,8 @@ public class MessageHandler {
         try {
             out.writeObject(msg.getBytes());
             out.flush();
+        } catch (EOFException e) {
+            DebugLogger.instance.log("Output stream closed");
         } catch (IOException e) {
             e.printStackTrace();
             DebugLogger.instance.err("IOException: %s", e.getMessage());
@@ -74,6 +76,8 @@ public class MessageHandler {
         try {
             byte[] bytes = (byte[]) in.readObject();
             return new Message(bytes);
+        } catch (EOFException e) {
+            DebugLogger.instance.log("Input stream closed");
         } catch (IOException e) {
             e.printStackTrace();
             DebugLogger.instance.err("IOException: %s", e.getMessage());
