@@ -111,10 +111,6 @@ public class Client implements Runnable {
                             break;
                     }
                 }
-                // All peers have the file, exit
-                DebugLogger.instance.log("Client exiting...");
-                // Say that this thread is ready to exit
-                PieceStorage.instance.writeAllPiecesToFile();
             } else {
                 DebugLogger.instance.err("Handshake invalid");
             }
@@ -127,6 +123,8 @@ public class Client implements Runnable {
         } finally {
             // Close connections
             try {
+                DebugLogger.instance.log("Client for peer %s exiting...", targetInfo.peerID);
+                PieceStorage.instance.writeAllPiecesToFile();
                 in.close();
                 out.close();
                 requestSocket.close();

@@ -381,9 +381,6 @@ public class Server implements Runnable {
 								break;
 						}
 					}
-					DebugLogger.instance.log("Handler for peer %s exiting...", connectedInfo.peerID);
-					// Say that this thread is ready to exit
-					PieceStorage.instance.writeAllPiecesToFile();
 				} else {
 					DebugLogger.instance.err("Handshake failed for peer %s", peerID);
 				}
@@ -392,6 +389,8 @@ public class Server implements Runnable {
 			} finally {
 				// Close connections
 				try {
+					DebugLogger.instance.log("Handler for peer %s exiting...", connectedInfo.peerID);
+					PieceStorage.instance.writeAllPiecesToFile();
 					in.close();
 					out.close();
 					connection.close();

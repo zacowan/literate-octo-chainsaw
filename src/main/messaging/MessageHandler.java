@@ -66,9 +66,12 @@ public class MessageHandler {
             out.flush();
         } catch (EOFException e) {
             DebugLogger.instance.log("Output stream closed");
+        } catch (SocketException e) {
+            DebugLogger.instance.log("Socket closed: %s", e.getMessage());
         } catch (IOException e) {
-            e.printStackTrace();
             DebugLogger.instance.err("IOException: %s", e.getMessage());
+        } catch (Exception e) {
+            DebugLogger.instance.err("Unknown exception: %s", e.getMessage());
         }
     }
 
@@ -78,14 +81,20 @@ public class MessageHandler {
             return new Message(bytes);
         } catch (EOFException e) {
             DebugLogger.instance.log("Input stream closed");
+            return null;
+        } catch (SocketException e) {
+            DebugLogger.instance.log("Socket closed: %s", e.getMessage());
+            return null;
         } catch (IOException e) {
-            e.printStackTrace();
             DebugLogger.instance.err("IOException: %s", e.getMessage());
+            return null;
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
             DebugLogger.instance.err("ClassNotFoundException: %s", e.getMessage());
+            return null;
+        } catch (Exception e) {
+            DebugLogger.instance.err("Unknown exception: %s", e.getMessage());
+            return null;
         }
-        return null;
     }
 
     /*

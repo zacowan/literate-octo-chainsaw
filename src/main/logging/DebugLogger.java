@@ -36,6 +36,5 @@ public class DebugLogger {
         } else {
             System.err.printf("[Peer %s:%s] %s\n", peerID, getClassMethodName(), msg);
         }
-        System.exit(-1);
     }
 }
