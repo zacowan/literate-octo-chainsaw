@@ -17,6 +17,16 @@ public class Server implements Runnable {
 
 	private static List<String> interested = new ArrayList<>();
 
+	private static String currOptimistic = null;
+
+	private static synchronized String getCurrOptimistic() {
+		return currOptimistic;
+	}
+
+	private static synchronized void setCurrOptimistic(String peerID) {
+		currOptimistic = peerID;
+	}
+
 	public static synchronized List<String> getInterested() {
 		return interested;
 	}
@@ -236,8 +246,6 @@ public class Server implements Runnable {
 
 	// Handles optimistically unchoking an interested peer
 	private static class HandleOptimisticUnchoke implements Runnable {
-		private String prev = null;
-
 		public void run() {
 			long time = Long.parseLong(CommonConfig.optimisticUnchokingInterval);
 
@@ -273,6 +281,7 @@ public class Server implements Runnable {
 					msgHandler.sendMessage(Server.getOutputStreams().get(randomPeer), MessageType.UNCHOKE,
 							new EmptyPayload());
 
+					String prev = getCurrOptimistic();
 					// Send choke to previous optimistically unchoked neighbor
 					if (prev != null) {
 						msgHandler.sendMessage(Server.getOutputStreams().get(prev), MessageType.CHOKE,
@@ -281,14 +290,16 @@ public class Server implements Runnable {
 
 					// Update state variables
 					setUnchoked(prev, false);
-					prev = randomPeer;
+					setCurrOptimistic(randomPeer);
 					setUnchoked(randomPeer, true);
 
 					DebugLogger.instance.log("Finished determining new optimistically unchoked neighbor");
 
-					FileLogger.instance.logChangeOptUnchokedNeighbor(prev);
+					FileLogger.instance.logChangeOptUnchokedNeighbor(randomPeer);
 				} else {
 					DebugLogger.instance.log("There are no neighbors that need to be unchoked.");
+
+					FileLogger.instance.logChangeOptUnchokedNeighbor("null");
 				}
 
 				// Wait the interval
