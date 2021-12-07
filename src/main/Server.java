@@ -18,6 +18,15 @@ public class Server implements Runnable {
 	private static List<String> interested = new ArrayList<>();
 
 	private static String currOptimistic = null;
+	private static List<String> currPreferred = new ArrayList<>();
+
+	private static synchronized void setCurrPreferred(List<String> l) {
+		currPreferred = new ArrayList<String>(l);
+	}
+
+	private static synchronized Boolean checkIfCurrentlyPreferred(String peerID) {
+		return currPreferred.indexOf(peerID) != -1;
+	}
 
 	private static synchronized String getCurrOptimistic() {
 		return currOptimistic;
@@ -224,6 +233,9 @@ public class Server implements Runnable {
 					setUnchoked(p, true);
 				}
 
+				// Update currently preferred neighbors
+				setCurrPreferred(newPreferred);
+
 				DebugLogger.instance.log("Finished determining new preferred neighbors");
 
 				// Log
@@ -283,7 +295,7 @@ public class Server implements Runnable {
 
 					String prev = getCurrOptimistic();
 					// Send choke to previous optimistically unchoked neighbor
-					if (prev != null) {
+					if (prev != null && !checkIfCurrentlyPreferred(prev)) {
 						msgHandler.sendMessage(Server.getOutputStreams().get(prev), MessageType.CHOKE,
 								new EmptyPayload());
 					}
