@@ -14,6 +14,10 @@ Everything in our project works as intended. However, we were not able to get ei
 
 Link: TODO
 
+### Demo Issues
+
+We encountered some issues during multiple runs of our demo video where servers were running slowly and some of our logs were out of sync as a result. Running when there is less traffic from students should resolve this issue, as well as running locally.
+
 ## Running the Project
 
 ### Compiling
