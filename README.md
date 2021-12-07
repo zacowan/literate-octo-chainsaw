@@ -20,7 +20,7 @@ Diagram: https://drive.google.com/file/d/170t8bSQvOByvuJmGKxeqEdJOYjQb3RMS/view?
 
 #### Other
 
-- `scp -r ~/Development/literate-octo-chainsaw/_build_/* zcowan@lin114-01.cise.ufl.edu:/cise/homes/zcowan/`
+- `scp -r ~/Development/literate-octo-chainsaw/_build_/* zcowan@lin114-01.cise.ufl.edu:/cise/homes/zcowan/networking`
 
 ### Zipping for Midpoint Submission
 
