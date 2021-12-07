@@ -106,13 +106,13 @@ public class FileLogger {
 
     // sahir
     public synchronized void logUnchoking(String peerID) {
-        String log = getTimestamp() + getPeerString(peerID) + " is unchoked by " + getPeerString(hostID);
+        String log = getTimestamp() + getPeerString(hostID) + " is unchoked by " + getPeerString(peerID);
         writeLogToFile(log);
     }
 
     // sahir
     public synchronized void logChocking(String peerID) {
-        String log = getTimestamp() + getPeerString(peerID) + " is choked by " + getPeerString(hostID);
+        String log = getTimestamp() + getPeerString(hostID) + " is choked by " + getPeerString(peerID);
         writeLogToFile(log);
     }
 
