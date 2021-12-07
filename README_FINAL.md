@@ -12,11 +12,11 @@ Everything in our project works as intended. However, we were not able to get ei
 
 ## Demo Video
 
-Link: TODO
+Link: https://uflorida-my.sharepoint.com/:v:/g/personal/zcowan_ufl_edu/ESnWj5kYpmhBveu2E42rhyYBtU28gSpSBLPXDeeDLsLC_g?e=pjZPTk
 
 ### Demo Issues
 
-We encountered some issues during multiple runs of our demo video where servers were running slowly and some of our logs were out of sync as a result. Running when there is less traffic from students should resolve this issue, as well as running locally.
+We encountered some issues during multiple runs of our demo video where servers were running slowly and some of our logs were out of sync as a result. Running when there is less traffic from students should resolve this issue, as well as running locally. In particular, server 1 seemed to be slightly out of sync.
 
 ## Running the Project
 
