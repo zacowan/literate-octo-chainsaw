@@ -70,22 +70,19 @@ public class PieceStorage {
         this.fileLocation = directoryName + "/" + CommonConfig.fileName;
         this.filePath = Paths.get(this.fileLocation);
 
-        // Initialize the file
-        new File(directoryName).mkdirs();
-        truncateFile();
-
         int numPieces = (int) Math
                 .ceil(Double.parseDouble(CommonConfig.fileSize) / Double.parseDouble(CommonConfig.pieceSize));
         int pieceSize = Integer.parseInt(CommonConfig.pieceSize);
 
         if (!hasFile) {
+            // Create the file
+            truncateFile();
             this.downloaded = new HashMap<Integer, byte[]>(numPieces);
-
         } else {
             this.downloaded = new HashMap<Integer, byte[]>(numPieces);
             // Open file and update downloaded with file data
             try {
-                InputStream in = new FileInputStream(CommonConfig.fileName);
+                InputStream in = new FileInputStream(fileLocation);
                 // 1 char = 2 bytes
                 // Read pieceSize / 2 characters, pieceNum times
                 for (int i = 0; i < numPieces; i++) {
@@ -109,8 +106,8 @@ public class PieceStorage {
                     }
                 }
                 in.close();
-                writeCurrentPiecesToFile();
             } catch (FileNotFoundException e) {
+                DebugLogger.instance.err("You must place the file for this peer in the directory %s", directoryName);
                 DebugLogger.instance.err("Error reading file, %s", e.getMessage());
             } catch (IOException e) {
                 DebugLogger.instance.err("Error closing file, %s", e.getMessage());
