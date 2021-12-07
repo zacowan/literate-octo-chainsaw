@@ -6,6 +6,10 @@
 - Sahir Limage
 - Zachary Cowan
 
+## Things that Do Not Work
+
+Everything in our project works as intended. However, we were not able to get either provided script for running peers remotely through a Java program to work. We were able to manually SSH into the servers and run our project perfectly fine, just not with the Java script. As a result, we ran the demo by manually SSHing into the Linux servers.
+
 ## Demo Video
 
 Link: TODO
